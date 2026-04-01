@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TDN Theory Reference — Relational Temporal</title>
+<style>
+:root {
+  --bg: #0D0D0F;
+  --surface: #16161A;
+  --surface-alt: #1E1E24;
+  --border: #2A2A32;
+  --text: #E8E6E3;
+  --text-dim: #8A8890;
+  --accent: #E8A0BE;
+  --chord: #6B9FC7;
+  --iceface: #B359E6;
+  --active: #A0D4E8;
+  --warning: #C7A06B;
+  --green: #7BC76B;
+  --red: #E06060;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 14px;
+}
+.page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* ── Slide ── */
+.slide {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 0;
+  border-bottom: 1px solid var(--border);
+}
+.slide:last-child { border-bottom: none; }
+
+.slide-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 32px;
+}
+
+h1 {
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+h1 .accent { color: var(--accent); }
+h1 .iceface { color: var(--iceface); }
+
+.tagline {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  font-style: italic;
+}
+.credit {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 24px;
+}
+
+h2 {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+h3 {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+p { margin-bottom: 14px; }
+
+/* ── Comparison boxes ── */
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 20px 0;
+}
+.compare-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 18px;
+}
+.compare-box.old { border-top: 3px solid var(--text-dim); }
+.compare-box.new { border-top: 3px solid var(--iceface); }
+.compare-box.problem { border-top: 3px solid var(--red); }
+.compare-box.solution { border-top: 3px solid var(--green); }
+.compare-box h4 {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  color: var(--text-dim);
+}
+.compare-box.new h4 { color: var(--iceface); }
+.compare-box.solution h4 { color: var(--green); }
+.compare-box p { font-size: 13px; margin-bottom: 8px; }
+.compare-box .dim { color: var(--text-dim); }
+
+/* ── Core principle box ── */
+.core {
+  background: var(--surface);
+  border: 1px solid var(--iceface);
+  border-radius: 6px;
+  padding: 18px 22px;
+  margin: 24px 0;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.core strong { color: var(--iceface); }
+
+/* ── Keyboard diagram ── */
+.keyboard {
+  display: flex;
+  gap: 2px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+.key {
+  width: 52px;
+  height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.key.white {
+  background: var(--text);
+  color: var(--bg);
+}
+.key.black {
+  background: var(--surface-alt);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+.key .label-small {
+  font-size: 8px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.key.white .label-small { color: var(--text-dim); }
+.key.black .label-small { color: var(--iceface); }
+
+/* ── Formula ── */
+.formula {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px 18px;
+  margin: 14px 0;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--accent);
+}
+
+/* ── Three-column ── */
+.three-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin: 20px 0;
+}
+.col-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+.col-box h4 {
+  font-size: 12px;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.col-box p { font-size: 12px; margin-bottom: 6px; }
+.col-box .value { color: var(--accent); font-weight: 700; }
+.col-box.highlight { border-color: var(--iceface); }
+.col-box.highlight h4 { color: var(--iceface); }
+
+/* ── Table ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 12px;
+}
+th {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  text-align: left;
+}
+td {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+td.check { color: var(--green); }
+td.cross { color: var(--red); }
+
+/* ── Code block ── */
+.code-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-x: auto;
+}
+.code-block .comment { color: var(--text-dim); }
+.code-block .keyword { color: var(--chord); }
+.code-block .value { color: var(--accent); }
+
+/* ── Flow diagram ── */
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+  flex-wrap: wrap;
+}
+.flow-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 18px;
+  text-align: center;
+  flex: 1;
+  min-width: 160px;
+}
+.flow-box h4 { font-size: 14px; font-weight: 900; margin-bottom: 4px; }
+.flow-box .sub { font-size: 10px; color: var(--text-dim); margin-bottom: 6px; }
+.flow-box .desc { font-size: 11px; }
+.flow-box.ice { border-color: var(--iceface); }
+.flow-box.ice h4 { color: var(--iceface); }
+.flow-arrow {
+  font-size: 20px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+  .compare { grid-template-columns: 1fr; }
+  .three-col { grid-template-columns: 1fr; }
+  .flow { flex-direction: column; }
+  .flow-arrow { transform: rotate(90deg); }
+  h1 { font-size: 26px; }
+  .key { width: 42px; height: 36px; font-size: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 1: Title -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <h1><span class="accent">RELATIONAL</span><br>TEMPORAL</h1>
+  <p class="tagline">A principle that simultaneously transcribes structural relationships between notes onto both time and pitch axes.</p>
+  <p class="credit">Iceface | Theory & Implementation | 2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 2: What is Relational? -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>W H A T &nbsp; I S &nbsp; R E L A T I O N A L ?</h2>
+  <h3>What does "Relational" mean?</h3>
+
+  <div class="compare">
+    <div class="compare-box old">
+      <h4>Conventional: Absolute</h4>
+      <p>Each note has a fixed value.</p>
+      <p class="dim">Pitch: C# = 100 cents (always fixed)<br>
+      Rhythm: all notes spaced equally</p>
+      <p class="dim">No structural relationship exists between notes.</p>
+      <p class="dim">12-TET / conventional arpeggiators</p>
+    </div>
+    <div class="compare-box new">
+      <h4>Iceface: Relational</h4>
+      <p>Each note is defined by its relationship to neighboring structural notes.</p>
+      <p>Pitch: black key = defined by distance N to right-neighbor white key<br>
+      Rhythm: black key = defined by interval ratio N to white key</p>
+      <p>A single parameter <strong>N</strong> controls the behavior of all non-diatonic notes.</p>
+    </div>
+  </div>
+
+  <div class="core">
+    <strong>Core principle:</strong> In music, "white keys" serve as structural reference points (diatonic reference), and "black keys" are defined by their <strong>relationship (distance N)</strong> to those reference points. This principle can be applied not only to pitch but to any musical parameter.
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 3: Structural Reference D -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>S T R U C T U R A L &nbsp; R E F E R E N C E</h2>
+  <h3>D — The Diatonic Reference Position</h3>
+
+  <div class="keyboard">
+    <div class="key white">C<span class="label-small">D</span></div>
+    <div class="key black">C#<span class="label-small">non-D</span></div>
+    <div class="key white">D<span class="label-small">D</span></div>
+    <div class="key black">D#<span class="label-small">non-D</span></div>
+    <div class="key white">E<span class="label-small">D</span></div>
+    <div class="key white">F<span class="label-small">D</span></div>
+    <div class="key black">F#<span class="label-small">non-D</span></div>
+    <div class="key white">G<span class="label-small">D</span></div>
+    <div class="key black">G#<span class="label-small">non-D</span></div>
+    <div class="key white">A<span class="label-small">D</span></div>
+    <div class="key black">A#<span class="label-small">non-D</span></div>
+    <div class="key white">B<span class="label-small">D</span></div>
+  </div>
+
+  <div class="formula">
+    D = { 0, 2, 4, 5, 7, 9, 11 } &nbsp;&nbsp;&nbsp; non-D = { 1, 3, 6, 8, 10 }
+  </div>
+
+  <table>
+    <tr><th>What D IS</th><th>What D IS NOT</th></tr>
+    <tr><td class="check">&#10003; The positions of white keys on a piano keyboard</td><td class="cross">&#10007; Tonal scale degrees (I, II, III...)</td></tr>
+    <tr><td class="check">&#10003; Keyboard-topological</td><td class="cross">&#10007; Functional harmony degree numbers</td></tr>
+    <tr><td class="check">&#10003; A physical, structural fact</td><td class="cross">&#10007; Note names dependent on a specific key</td></tr>
+    <tr><td class="check">&#10003; The foundation of all Iceface transformations</td><td class="cross">&#10007; A diatonic scale in music theory</td></tr>
+  </table>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 4: I(D,N) — Iceface Tuning -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>R E L A T I O N A L - T O N A L</h2>
+  <h3>I(D,N) — Iceface Tuning</h3>
+
+  <p>Black key pitch = right-neighbor white key &minus; N cents</p>
+  <p style="color:var(--text-dim)">The first form of the Relational principle applied to pitch space. Implemented in Iceface Toy One. White key pitches are fixed; only black keys move with N.</p>
+
+  <div class="three-col">
+    <div class="col-box">
+      <h4>N = 0&cent;</h4>
+      <p><strong>Diatonic Pure</strong></p>
+      <p>Black key = same as right-neighbor white key (absorbed &rarr; vanishes)</p>
+      <p class="dim">Only C D E F G A B remain</p>
+    </div>
+    <div class="col-box highlight">
+      <h4>N = 50&cent;</h4>
+      <p><strong>Iceface Tuning</strong></p>
+      <p>Black keys pulled 50&cent; toward right-neighbor white key</p>
+      <p class="dim">Unique microtonal tuning</p>
+    </div>
+    <div class="col-box">
+      <h4>N = 100&cent;</h4>
+      <p><strong>12-TET (Conventional)</strong></p>
+      <p>Black key = standard semitone</p>
+      <p class="dim">All notes equidistant</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 5: T(D,N) — Dual Transformation -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>R E L A T I O N A L - T E M P O R A L</h2>
+  <h3>T(D,N) — Dual Transformation</h3>
+
+  <p>The transformation that I(D,N) performs in pitch space, now simultaneously transcribed into time space. Realized in IcefaceTDN's KINETIC mode.</p>
+
+  <div class="formula">
+    Time axis: &nbsp; black key step interval = stepSize &times; N<br>
+    Pitch axis: &nbsp; black key offset = +(1 &minus; N) &times; 100&cent;
+  </div>
+
+  <div class="three-col">
+    <div class="col-box">
+      <h4>N = 0</h4>
+      <p><strong>Diatonic Pure</strong></p>
+      <p>Time: step = 0 &rarr; non-D notes completely skipped</p>
+      <p>Pitch: offset = +100&cent; &rarr; same as right-neighbor white key (vanishes)</p>
+      <p class="dim">C D E F G A B play at even intervals</p>
+    </div>
+    <div class="col-box highlight">
+      <h4>N = 0.5</h4>
+      <p><strong>Iceface Asymmetric</strong></p>
+      <p>Time: step = step &times; 0.5 &rarr; triggers at half the white-key interval</p>
+      <p>Pitch: offset = +50&cent; &rarr; pulled 50&cent; toward right-neighbor white key</p>
+      <p class="dim">Complete spatiotemporal reproduction of I(D,N)</p>
+    </div>
+    <div class="col-box">
+      <h4>N = 1.0</h4>
+      <p><strong>Equal Interval (Conventional)</strong></p>
+      <p>Time: step = step &times; 1.0 &rarr; same interval as white keys</p>
+      <p>Pitch: offset = 0&cent; &rarr; 12-TET unchanged</p>
+      <p class="dim">Conventional chromatic arpeggiator</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 6: Why Dual? -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>W H Y &nbsp; D U A L ?</h2>
+  <h3>Why transform pitch as well as time?</h3>
+
+  <div class="compare">
+    <div class="compare-box problem">
+      <h4>Temporal-only (Incomplete)</h4>
+      <p>Changing only the time interval by N:</p>
+      <p>At N = 0.5:<br>
+      C# triggers at half the interval of C,<br>
+      but pitch remains 12-TET (100&cent;)</p>
+      <p><strong>Problem:</strong> Symmetry with I(D,N) breaks.<br>
+      Iceface Tuning's concept is "pulling black keys toward white keys,"<br>
+      but temporal-only pulls in time while leaving pitch distant.</p>
+    </div>
+    <div class="compare-box solution">
+      <h4>Dual Transformation (Complete)</h4>
+      <p>Changing time + pitch simultaneously by N:</p>
+      <p>At N = 0.5:<br>
+      C# triggers at half the interval of C,<br>
+      and pitch also shifts 50&cent; toward D</p>
+      <p><strong>Result:</strong> Perfect symmetry with I(D,N) is achieved.<br>
+      Black keys are "pulled toward white keys" in both time and pitch.<br>
+      At N = 0, both axes vanish &rarr; complete consistency.</p>
+    </div>
+  </div>
+
+  <div class="core">
+    <strong>I(D,N):</strong> pitch = right-neighbor white key &minus; N&cent;<br>
+    <strong>T(D,N):</strong> step = step &times; N, &nbsp; pitch += (1&minus;N) &times; 100&cent;<br><br>
+    &rarr; As N approaches 0, black keys are absorbed into white keys in both time and pitch.
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 7: Implementation -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>I M P L E M E N T A T I O N</h2>
+  <h3>PlaybackEngine.tickKinetic() Implementation</h3>
+
+  <div class="compare">
+    <div class="compare-box old">
+      <h4>Time Axis Transformation</h4>
+      <div class="code-block">
+        <span class="comment">// Diatonic check for current note</span><br>
+        <span class="keyword">let</span> note = noteArray[kineticSeqIndex]<br>
+        <span class="keyword">let</span> isDia = D.contains(note % <span class="value">12</span>)<br><br>
+        <span class="comment">// Determine step interval</span><br>
+        <span class="keyword">if</span> isDia:<br>
+        &nbsp;&nbsp;step = kStep &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// standard</span><br>
+        <span class="keyword">else if</span> N &asymp; <span class="value">0</span>:<br>
+        &nbsp;&nbsp;advanceIndex() &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// skip</span><br>
+        <span class="keyword">else</span>:<br>
+        &nbsp;&nbsp;step = kStep &times; N &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// scaled by N</span><br><br>
+        <span class="comment">// Trigger when distance exceeds step</span><br>
+        <span class="keyword">if</span> accum >= step &rarr; trigger
+      </div>
+    </div>
+    <div class="compare-box new">
+      <h4>Pitch Axis Transformation</h4>
+      <div class="code-block">
+        <span class="comment">// Apply pitch offset at trigger time</span><br>
+        <span class="keyword">let</span> pc = note % <span class="value">12</span><br>
+        <span class="keyword">let</span> isDia = D.contains(pc)<br><br>
+        <span class="keyword">let</span> cents =<br>
+        &nbsp;&nbsp;isDia ? <span class="value">0.0</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// white key: unchanged</span><br>
+        &nbsp;&nbsp;: (<span class="value">1</span>&minus;N) &times; <span class="value">100.0</span> &nbsp;&nbsp;&nbsp;<span class="comment">// black key: shifted</span><br><br>
+        <span class="comment">// Internal synth: direct microtuning</span><br>
+        audio.playNote(note, cents)<br><br>
+        <span class="comment">// MIDI output: expressed via pitch bend</span><br>
+        midi.pitchBend(<span class="value">8192</span> + cents &times; <span class="value">40.96</span>)
+      </div>
+    </div>
+  </div>
+
+  <p style="color:var(--text-dim);font-size:12px;margin-top:16px">Note: Because current-note semantics are used, the same rules apply without additional peek logic even in RANDOM direction mode.</p>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- SLIDE 8: Unified Principle -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>U N I F I E D &nbsp; P R I N C I P L E</h2>
+  <h3>The Unified Principle</h3>
+
+  <p>With respect to the diatonic reference position D, the behavior of non-diatonic notes is controlled by a <strong>single parameter N</strong>. This principle is independent of its target domain.</p>
+
+  <div class="flow">
+    <div class="flow-box">
+      <h4>Pitch Space</h4>
+      <div class="sub">I(D,N)</div>
+      <div class="desc">Iceface Toy One</div>
+      <div class="formula" style="margin:8px 0 0;font-size:11px;padding:8px 12px">pitch = neighbor &minus; N&cent;</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box ice">
+      <h4>Time + Pitch Space</h4>
+      <div class="sub">T(D,N)</div>
+      <div class="desc">IcefaceTDN KINETIC</div>
+      <div class="formula" style="margin:8px 0 0;font-size:11px;padding:8px 12px;border-color:var(--iceface)">step = s&times;N, &nbsp; pitch += (1&minus;N)&times;100&cent;</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box">
+      <h4>Future Extensions</h4>
+      <div class="sub">?</div>
+      <div class="desc">velocity, timbre...</div>
+      <div class="formula" style="margin:8px 0 0;font-size:11px;padding:8px 12px">Same D and N applied to any parameter</div>
+    </div>
+  </div>
+
+  <div class="core" style="text-align:center;margin-top:40px;font-size:15px;letter-spacing:1px">
+    <strong>Relational</strong> — A principle that transcribes structural relationships onto every dimension of music.
+  </div>
+</div>
+
+</div>
+</body>
+</html>

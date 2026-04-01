@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IcefaceTDN Beat Machine — Manual</title>
+<title>TDN Geo-Rotating Arpeggiator — Manual</title>
 <style>
 :root {
   --bg: #FAF7F5;
@@ -12,10 +12,10 @@
   --border: #D5CFCC;
   --text: #2A2523;
   --text-dim: #8A8280;
-  --accent: #C76B6B;
+  --accent: #E8A0BE;
   --chord: #6B9FC7;
   --warning: #C7A06B;
-  --active: #7BC76B;
+  --active: #A0D4E8;
   --iceface: #B359E6;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -49,6 +49,7 @@ body {
   letter-spacing: 1px;
   color: var(--text);
 }
+.topbar-links { display: flex; gap: 8px; align-items: center; }
 .topbar a {
   font-family: 'SF Mono','Menlo','Consolas', monospace;
   font-size: 9px;
@@ -60,6 +61,8 @@ body {
   border-radius: 3px;
 }
 .topbar a:hover { background: var(--accent); color: white; }
+.topbar a.dim { color: var(--text-dim); border-color: var(--border); }
+.topbar a.dim:hover { background: var(--surface-alt); color: var(--text); }
 .content { margin-top: 56px; }
 
 h1 {
@@ -111,10 +114,10 @@ li { margin-bottom: 6px; }
   letter-spacing: 0.5px;
   vertical-align: middle;
 }
-.label-accent { background: var(--accent); color: white; }
+.label-accent { background: var(--accent); color: #3A2030; }
 .label-chord  { background: var(--chord);  color: white; }
 .label-warn   { background: var(--warning); color: white; }
-.label-active { background: var(--active); color: white; }
+.label-active { background: var(--active); color: #1A3A4A; }
 .label-ice    { background: var(--iceface); color: white; }
 .label-dim    { background: var(--surface-alt); color: var(--text-dim); border: 1px solid var(--border); }
 
@@ -206,36 +209,43 @@ code {
 <body>
 
 <div class="topbar">
-  <span class="topbar-title">ICEFACETDN BEAT MACHINE — MANUAL</span>
-  <a href="manual_ja.html" style="color:var(--text-dim);border-color:var(--border)">日本語</a>
-  <a href="index.html">&#9654; OPEN APP</a>
+  <span class="topbar-title">TDN GEO-ROTATING ARPEGGIATOR — MANUAL</span>
+  <div class="topbar-links">
+    <a href="manual_ja.html" class="dim">日本語</a>
+    <a href="index.html">&#9654; OPEN APP</a>
+  </div>
 </div>
 
 <div class="page">
 <div class="content">
 
-<h1>IcefaceTDN Beat Machine</h1>
-<p class="subtitle">A kinetic music instrument based on the T(D,N) Relational-Temporal transformation.</p>
+<h1>TDN Geo-Rotating Arpeggiator</h1>
+<p class="subtitle">A kinetic music instrument with cloth-physics interaction, based on the T(D,N) Relational-Temporal transformation.</p>
 
 <div class="toc">
   <h4>CONTENTS</h4>
   <ol>
     <li><a href="#overview">Overview</a></li>
     <li><a href="#playing">How to Play</a></li>
+    <li><a href="#global-presets">Global Presets</a></li>
     <li><a href="#tdn">T(D,N) — The Core Principle</a></li>
     <li><a href="#scale-tuning">Scale & Tuning</a></li>
     <li><a href="#synth">Synth</a></li>
     <li><a href="#drums">Drums</a></li>
     <li><a href="#direction">Direction</a></li>
     <li><a href="#kinetic">Kinetic Parameters</a></li>
+    <li><a href="#field-drag">Field Drag — Cloth Physics</a></li>
     <li><a href="#drum-pattern">Drum Pattern Grid</a></li>
+    <li><a href="#bpm">BPM Display</a></li>
   </ol>
 </div>
 
 <!-- ── Overview ── -->
 <h2 id="overview">1. Overview</h2>
 
-<p>IcefaceTDN Beat Machine is a kinetic music instrument. Notes are not triggered by pressing keys — they are triggered by <strong>movement</strong>. The distance your cursor travels across the canvas determines when the next note fires.</p>
+<p>TDN Geo-Rotating Arpeggiator is a kinetic music instrument. Notes are not triggered by pressing keys — they are triggered by <strong>movement</strong>. The distance your cursor (or finger) travels across the canvas determines when the next note fires.</p>
+
+<p>The canvas displays a cloth-like mesh that responds to drag interaction with realistic physics — stretching, wrinkling, and springing back. This physical deformation is not just visual: it directly modulates pitch, velocity, filter, and timing in real time.</p>
 
 <p>The instrument is built around a single theoretical principle: <strong>T(D,N)</strong>, a dual transformation that simultaneously alters both the timing and pitch of non-diatonic notes based on a single parameter, <em>N</em>.</p>
 
@@ -247,10 +257,10 @@ code {
 <h2 id="playing">2. How to Play</h2>
 
 <h3>Auto Play</h3>
-<p>Click the <span class="label label-active">▶ PLAY</span> button in the sidebar. The cursor follows a geometric path automatically. Select the path shape from the dropdown next to the Play button. Adjust <strong>Speed</strong> to control how fast the cursor moves.</p>
+<p>Click the <span class="label label-active">&#9654; PLAY</span> button in the sidebar. The cursor follows a geometric path automatically, generating notes as it moves. Select the path shape from the dropdown next to the Play button. Adjust <strong>Speed</strong> to control how fast the cursor moves.</p>
 
-<h3>Manual Play</h3>
-<p>Click and drag anywhere on the canvas. Notes trigger as you move. The faster you move, the more notes fire in a given time. Releasing the mouse stops playback. Manual dragging will stop Auto Play.</p>
+<h3>Manual Play (Field Drag)</h3>
+<p>Click and drag anywhere on the canvas. The cloth mesh deforms under your finger/cursor. Notes trigger as the auto-play cursor moves, while your drag modulates the sound through the Field Drag system — warping pitch, velocity, filter, and swing in real time. Releasing the mouse lets the cloth spring back.</p>
 
 <h3>Geometric Patterns</h3>
 <p>The auto-play cursor follows mathematical curves. Each curve has a different character:</p>
@@ -264,6 +274,7 @@ code {
   <tr><td><code>Rose r=cos(5t)</code></td><td>5-petal rose. Irregular, asymmetric flow.</td></tr>
   <tr><td><code>Spiral</code></td><td>Grows outward then resets. Dynamic crescendo shape.</td></tr>
   <tr><td><code>Pentagon</code></td><td>Linear segments with sharp corners. Percussive accent at each vertex.</td></tr>
+  <tr><td><code>Square</code></td><td>Four-sided path. Regular, grid-like motion.</td></tr>
   <tr><td><code>Star</code></td><td>5-pointed star. Alternating long and short segments.</td></tr>
   <tr><td><code>Breathing</code></td><td>Pulsing radius. Swells and shrinks organically.</td></tr>
   <tr><td><code>Trefoil</code></td><td>Three-lobed knot projection. Dense, overlapping paths.</td></tr>
@@ -273,15 +284,40 @@ code {
   <tr><td><code>Random Walk</code></td><td>Brownian motion. Drifting, exploratory.</td></tr>
 </table>
 
+<hr class="divider">
+
+<!-- ── Global Presets ── -->
+<h2 id="global-presets">3. Global Presets</h2>
+
+<p>The <span class="label label-accent">GLOBAL PRESET</span> dropdown at the top of the sidebar loads a complete configuration — tuning, scale, pattern, synth settings, drum pattern, kinetic parameters, and direction — all at once.</p>
+
+<table>
+  <tr><th>Preset</th><th>Character</th></tr>
+  <tr><td><strong>ICEFACE PENTAGON</strong></td><td>The default. Iceface tuning + Pentagon path. Balanced T(D,N) showcase.</td></tr>
+  <tr><td><strong>ACID SAW</strong></td><td>Sawtooth + high resonance + glide. Classic acid bass energy.</td></tr>
+  <tr><td><strong>GHOST AMBIENT</strong></td><td>Just Intonation + Spiral + LEAP mode. Ethereal, slow, spacious.</td></tr>
+  <tr><td><strong>RAW CHIP</strong></td><td>Square wave + Chromatic. Sharp, retro chip-tune character.</td></tr>
+  <tr><td><strong>DEEP SUB</strong></td><td>Low base note + heavy glide + swing. Deep, pulsing sub-bass.</td></tr>
+  <tr><td><strong>COSMIC PULSE</strong></td><td>Pythagorean + Whole Tone + Star. Otherworldly, spacey pulse.</td></tr>
+  <tr><td><strong>NEON TRANCE</strong></td><td>Lydian + Figure 8 + swing. Driving, euphoric feel.</td></tr>
+  <tr><td><strong>DARK MATTER</strong></td><td>Iceface + Diminished + deep Z-Depth. Dark, cavernous textures.</td></tr>
+  <tr><td><strong>GLITCH JUNGLE</strong></td><td>Maqam Rast + Random Walk + LEAP. Chaotic, high-energy breakbeat.</td></tr>
+  <tr><td><strong>ZEN GARDEN</strong></td><td>Just Intonation + Spiral + minimal drums. Meditative, delicate.</td></tr>
+</table>
+
+<p>Adjusting any individual parameter after loading a preset switches the display to <code>-- CUSTOM / MANUAL --</code>, indicating that the configuration has diverged from the preset.</p>
+
+<hr class="divider">
+
 <!-- ── T(D,N) ── -->
-<h2 id="tdn">3. T(D,N) — The Core Principle</h2>
+<h2 id="tdn">4. T(D,N) — The Core Principle</h2>
 
 <p>T(D,N) stands for <em>Temporal-Diatonic transformation with parameter N</em>. It is the defining characteristic of this instrument — a single slider that simultaneously controls two musical dimensions.</p>
 
 <h3>The Diatonic Reference Set D</h3>
 <p>D is the set of pitch classes corresponding to the white keys of a standard keyboard:</p>
 
-<div class="formula">D = { 0, 2, 4, 5, 7, 9, 11 }  →  C, D, E, F, G, A, B</div>
+<div class="formula">D = { 0, 2, 4, 5, 7, 9, 11 }  &rarr;  C, D, E, F, G, A, B</div>
 
 <p>This is a topological reference, not a tonal scale. It defines which notes are <em>diatonic</em> (inside D) and which are <em>non-diatonic</em> (outside D — the black keys).</p>
 
@@ -290,15 +326,21 @@ code {
 
 <table>
   <tr><th>Dimension</th><th>Diatonic note</th><th>Non-diatonic note</th></tr>
-  <tr><td><strong>Time</strong> (step distance)</td><td>full stepSize</td><td>stepSize × N</td></tr>
-  <tr><td><strong>Pitch</strong> (cents offset)</td><td>0¢</td><td>+ (1 − N) × 100¢</td></tr>
+  <tr><td><strong>Time</strong> (step distance)</td><td>full stepSize</td><td>stepSize &times; N</td></tr>
+  <tr><td><strong>Pitch</strong> (cents offset)</td><td>0&cent;</td><td>+ (1 &minus; N) &times; 100&cent;</td></tr>
 </table>
 
 <div class="box iceface">
   <strong>Example — N = 0.5, Iceface Tuning:</strong><br>
-  A C# (non-diatonic) will fire after half the normal movement distance, and its pitch will be shifted +50 cents toward D. At the same time, the Iceface tuning preset shifts C# by +50¢ from its equal-tempered position.<br><br>
+  A C# (non-diatonic) will fire after half the normal movement distance, and its pitch will be shifted +50 cents toward D. At the same time, the Iceface tuning preset shifts C# by +50&cent; from its equal-tempered position.<br><br>
   Both transformations converge at the same value — the pitch and time compression are unified by a single N.
 </div>
+
+<h3>Z-Depth</h3>
+<p>Controls how strongly the T(D,N) velocity and filter modulation affect the sound. At Z-Depth = 0, all notes play at equal volume and brightness regardless of their diatonic status. At Z-Depth = 100%, non-diatonic notes at low N values become very quiet and dark — pushed deep into the background, like distant layers in a 3D space.</p>
+
+<h3>Swing</h3>
+<p>Applies rhythmic swing to the step timing. At 50% (center), all steps are even. Increasing swing makes even-numbered steps shorter and odd-numbered steps longer, creating a shuffle or groove feel. The Field Drag system can modulate swing in real time.</p>
 
 <h3>T(D,N) Mode vs T(D,N) LEAP Mode</h3>
 
@@ -308,13 +350,13 @@ code {
 
 <div class="formula">
 T(D,N) mode:
-  diatonic note    → stepSize × 1.0
-  non-diatonic     → stepSize × N
+  diatonic note    &rarr; stepSize &times; 1.0
+  non-diatonic     &rarr; stepSize &times; N
 
 T(D,N) LEAP mode:
-  interval = |current − previous| semitones
-  stretch  = 1.0 + (interval − 1) / 10      → 1st: 1.0×,  11th: 2.0×
-  step     = stepSize × (1 + (stretch−1) × N)
+  interval = |current &minus; previous| semitones
+  stretch  = 1.0 + (interval &minus; 1) / 10      &rarr; 1st: 1.0&times;,  11th: 2.0&times;
+  step     = stepSize &times; (1 + (stretch&minus;1) &times; N)
 </div>
 
 <p>In LEAP mode, N scales the degree of stretch. At N = 0, all steps are equal regardless of interval. At N = 1.0, large leaps breathe naturally while stepwise motion flows quickly — a principle common to expressive melodic performance.</p>
@@ -322,41 +364,72 @@ T(D,N) LEAP mode:
 <hr class="divider">
 
 <!-- ── Scale & Tuning ── -->
-<h2 id="scale-tuning">4. Scale & Tuning</h2>
+<h2 id="scale-tuning">5. Scale & Tuning</h2>
 
 <h3>Scale</h3>
 <p>Defines which pitch classes are available as note sources. The selected scale, combined with the Base note and Octave spread, determines the full note array that the kinetic engine steps through.</p>
 
-<h3>Tuning</h3>
-<p>Applies microtonal offsets (in cents) to each pitch class, modifying intonation without changing the note names. When an <span class="label label-ice">ICEFACE</span> tuning is selected, N automatically sets to 0.5 and the scale switches to Chromatic, enabling the full T(D,N) transformation.</p>
+<table>
+  <tr><th>Scale</th><th>Intervals</th></tr>
+  <tr><td>Major</td><td>0, 2, 4, 5, 7, 9, 11</td></tr>
+  <tr><td>Minor</td><td>0, 2, 3, 5, 7, 8, 10</td></tr>
+  <tr><td>Chromatic</td><td>All 12 semitones</td></tr>
+  <tr><td>Pentatonic</td><td>0, 2, 4, 7, 9</td></tr>
+  <tr><td>Dorian</td><td>0, 2, 3, 5, 7, 9, 10</td></tr>
+  <tr><td>Phrygian</td><td>0, 1, 3, 5, 7, 8, 10</td></tr>
+  <tr><td>Lydian</td><td>0, 2, 4, 6, 7, 9, 11</td></tr>
+  <tr><td>Whole Tone</td><td>0, 2, 4, 6, 8, 10</td></tr>
+  <tr><td>Diminished</td><td>0, 2, 3, 5, 6, 8, 9, 11</td></tr>
+</table>
 
-<p>Non-Iceface tunings (Equal, Just, Meantone, etc.) reset N to 1.0 and the scale to Major.</p>
+<h3>Tuning</h3>
+<p>Applies microtonal offsets (in cents) to each pitch class, modifying intonation without changing the note names.</p>
+
+<table>
+  <tr><th>Tuning</th><th>Type</th><th>Notes</th></tr>
+  <tr><td>Equal (12-TET)</td><td>Standard</td><td>No offsets. Standard equal temperament.</td></tr>
+  <tr><td><span class="label label-ice">Iceface</span></td><td>Iceface</td><td>Non-diatonic notes shifted +50&cent;. Sets N=0.5, Scale=Chromatic.</td></tr>
+  <tr><td>Just Intonation</td><td>Standard</td><td>Pure ratios. Smooth, beating-free intervals.</td></tr>
+  <tr><td>Meantone 1/4</td><td>Standard</td><td>Quarter-comma meantone. Historical keyboard tuning.</td></tr>
+  <tr><td>Pythagorean</td><td>Standard</td><td>Pure fifths chain. Strong melodic clarity.</td></tr>
+  <tr><td>Maqam Rast</td><td>Standard</td><td>Arabic maqam. Quarter-flat on E and B.</td></tr>
+  <tr><td><span class="label label-ice">Maqam Rast Iceface</span></td><td>Iceface</td><td>Maqam Rast + Iceface non-diatonic shift.</td></tr>
+  <tr><td>Kotori</td><td>Standard</td><td>F shifted +50&cent;, B shifted &minus;50&cent;.</td></tr>
+  <tr><td><span class="label label-ice">Kotori Iceface</span></td><td>Iceface</td><td>Kotori + Iceface non-diatonic shift.</td></tr>
+  <tr><td>Balloon</td><td>Standard</td><td>E shifted +50&cent;, B shifted +50&cent;.</td></tr>
+  <tr><td><span class="label label-ice">Balloon Iceface</span></td><td>Iceface</td><td>Balloon + Iceface non-diatonic shift.</td></tr>
+</table>
+
+<p>When an <span class="label label-ice">ICEFACE</span> tuning is selected, N automatically sets to 0.5 and the scale switches to Chromatic, enabling the full T(D,N) transformation. Non-Iceface tunings reset N to 1.0 and the scale to Major.</p>
 
 <h3>Base Note</h3>
-<p>The lowest note of the generated scale. The full note array spans upward from this note for the number of octaves specified.</p>
+<p>The lowest note of the generated scale (range: C2 to C6). The full note array spans upward from this note for the number of octaves specified.</p>
 
 <h3>Octaves</h3>
-<p>The number of octaves the note array covers. A wider spread gives a larger range and more variety in melodic movement.</p>
+<p>The number of octaves the note array covers (1 to 4). A wider spread gives a larger range and more variety in melodic movement.</p>
 
 <hr class="divider">
 
 <!-- ── Synth ── -->
-<h2 id="synth">5. Synth</h2>
+<h2 id="synth">6. Synth</h2>
 
 <h3>Wave</h3>
-<p>The oscillator waveform. Sine is the purest tone. Triangle is similar but slightly brighter. Square has strong odd harmonics — hollow and reedy. Sawtooth is the richest, with all harmonics present — the classic TB-303 basis.</p>
+<p>The oscillator waveform. <strong>Sine</strong> is the purest tone. <strong>Triangle</strong> is similar but slightly brighter. <strong>Square</strong> has strong odd harmonics — hollow and reedy. <strong>Sawtooth</strong> is the richest, with all harmonics present — the classic acid bass basis.</p>
 
 <h3>Cutoff</h3>
-<p>Low-pass filter cutoff frequency. Lower values darken the tone; higher values open up the full harmonic content. The filter responds in real time as you adjust.</p>
+<p>Low-pass filter cutoff frequency. Lower values darken the tone; higher values open up the full harmonic content. The Field Drag system can modulate this in real time.</p>
 
 <h3>Resonance</h3>
-<p>Emphasis at the cutoff frequency. Higher values produce a pronounced peak — the characteristic "wah" of acid bass sounds. Extreme values can produce self-oscillation.</p>
+<p>Emphasis at the cutoff frequency. Higher values produce a pronounced peak — the characteristic "wah" of acid bass sounds.</p>
+
+<h3>Reverb</h3>
+<p>Convolution reverb send amount. Adds spatial depth and sustain to the synth voice. At 0%, the sound is completely dry. Higher values create a wide, immersive ambience.</p>
 
 <h3>Glide (Portamento)</h3>
-<p>Smooths pitch transitions between notes. At 0, notes change instantly. As Glide increases, the oscillator slides from the previous pitch to the new one. Creates legato and TB-303-style portamento.</p>
+<p>Smooths pitch transitions between notes. At 0, notes change instantly. As Glide increases, the oscillator slides from the previous pitch to the new one. Creates legato and portamento effects.</p>
 
 <h3>Octave</h3>
-<p>Shifts the entire note array up or down by octaves. −1 or −2 produces bass register sounds appropriate for bass lines and sub-bass.</p>
+<p>Shifts the entire note array up or down by octaves (&minus;2 to +2). Negative values produce bass register sounds.</p>
 
 <h3>Volume</h3>
 <p>The output level of the synthesizer voice.</p>
@@ -364,18 +437,18 @@ T(D,N) LEAP mode:
 <hr class="divider">
 
 <!-- ── Drums ── -->
-<h2 id="drums">6. Drums</h2>
+<h2 id="drums">7. Drums</h2>
 
 <p>The drum engine synthesizes three voices from scratch using the Web Audio API — no samples are used.</p>
 
 <table>
   <tr><th>Voice</th><th>Synthesis</th></tr>
-  <tr><td><strong>K — Kick</strong></td><td>Pitch-swept sine wave (160Hz → 45Hz) with click transient. 0.4s decay.</td></tr>
+  <tr><td><strong>K — Kick</strong></td><td>Pitch-swept sine wave (160Hz &rarr; 45Hz) with click transient. 0.4s decay.</td></tr>
   <tr><td><strong>S — Snare</strong></td><td>Sine body + noise + snap oscillator + attack transient. 0.35s decay.</td></tr>
   <tr><td><strong>H — Hi-hat</strong></td><td>Filtered white noise with fast exponential decay. 0.08s.</td></tr>
 </table>
 
-<p>Drum steps advance in sync with note triggers — each time the kinetic engine fires a note, the drum sequencer advances one step.</p>
+<p>Drum steps advance in sync with note triggers — each time the kinetic engine fires a note, the drum sequencer advances one step. The Field Drag system modulates drum velocity and filter in real time.</p>
 
 <h3>Volume</h3>
 <p>Master level for all drum voices.</p>
@@ -386,7 +459,7 @@ T(D,N) LEAP mode:
 <hr class="divider">
 
 <!-- ── Direction ── -->
-<h2 id="direction">7. Direction</h2>
+<h2 id="direction">8. Direction</h2>
 
 <p>Controls how the note index advances through the note array after each trigger.</p>
 
@@ -401,23 +474,70 @@ T(D,N) LEAP mode:
 <hr class="divider">
 
 <!-- ── Kinetic ── -->
-<h2 id="kinetic">8. Kinetic Parameters</h2>
+<h2 id="kinetic">9. Kinetic Parameters</h2>
 
 <h3>Step</h3>
 <p>The base distance threshold (in canvas-fraction units) that the cursor must travel before triggering the next note. Smaller values trigger notes more rapidly for the same cursor speed. This value is modified by T(D,N) for non-diatonic notes.</p>
 
 <h3>Speed</h3>
-<p>Only active during Auto Play. Controls how fast the cursor moves along the geometric path. At Speed = 60, the cursor moves at a moderate tempo. Increase for faster, denser playback; decrease for slower, spacious phrasing.</p>
+<p>Only active during Auto Play. Controls how fast the cursor moves along the geometric path. Higher values produce faster, denser playback; lower values create slower, spacious phrasing.</p>
+
+<hr class="divider">
+
+<!-- ── Field Drag ── -->
+<h2 id="field-drag">10. Field Drag — Cloth Physics</h2>
+
+<p>The canvas displays a woven cloth mesh. When you click and drag on it, the fabric deforms with realistic physics — stretching, wrinkling, and springing back when released. This is the defining interaction model of the Geo-Rotating Arpeggiator.</p>
+
+<div class="box accent">
+  <strong>Field Drag is not just visual.</strong> The physical state of the cloth directly modulates the music in real time. Pulling the fabric changes how the instrument sounds — even while Auto Play is running.
+</div>
+
+<h3>How It Works</h3>
+<p>When you press and drag on the canvas, the system tracks:</p>
+<ul>
+  <li><strong>Anchor point</strong> — where you first pressed</li>
+  <li><strong>Cloth displacement</strong> — how far the fabric has been pulled (with spring physics and damping)</li>
+  <li><strong>Strain</strong> — the tension between your raw drag and the cloth's current position</li>
+  <li><strong>Speed</strong> — how fast you are moving</li>
+  <li><strong>Energy</strong> — a composite value that rises during active dragging and decays smoothly on release</li>
+</ul>
+
+<h3>What It Modulates</h3>
+
+<table>
+  <tr><th>Parameter</th><th>Source</th><th>Effect</th></tr>
+  <tr><td><strong>X Warp</strong></td><td>Horizontal cloth displacement</td><td>Modulates swing timing offset</td></tr>
+  <tr><td><strong>Tone</strong></td><td>Vertical cloth displacement</td><td>Modulates synth filter cutoff and drum filter. Drag up = brighter, drag down = darker.</td></tr>
+  <tr><td><strong>Depth</strong></td><td>Energy + strain</td><td>Adds Z-Depth lift — affects velocity and spatial depth</td></tr>
+  <tr><td><strong>Energy</strong></td><td>Composite of all drag forces</td><td>Overall modulation intensity. Drives velocity boost, kinetic acceleration, and visual effects.</td></tr>
+</table>
+
+<p>The Field Drag display in the sidebar shows the current values of X Warp, Tone, Depth, and Energy in real time.</p>
+
+<h3>Cloth Spring Behavior</h3>
+<p>The cloth uses a spring-damper model. When you pull and release, it doesn't snap back instantly — it oscillates and settles. This means the sound modulation continues briefly after you release, creating organic, decaying expression. The heavier the drag, the slower the spring constant, giving a weighty, fabric-like feel.</p>
 
 <hr class="divider">
 
 <!-- ── Drum Pattern Grid ── -->
-<h2 id="drum-pattern">9. Drum Pattern Grid</h2>
+<h2 id="drum-pattern">11. Drum Pattern Grid</h2>
 
 <p>The drum pattern editor at the bottom of the screen shows three rows — <strong>K</strong> (Kick), <strong>S</strong> (Snare), <strong>H</strong> (Hi-hat) — across all pattern steps.</p>
 
 <h3>Editing</h3>
-<p>Click any cell to toggle it on or off. An active cell is highlighted in color. The currently playing step is marked with a green border.</p>
+<p>Click any cell to toggle it on or off. An active cell is highlighted in color (pink for Kick, blue for Snare, gold for Hi-hat). The currently playing step is marked with a blue border.</p>
+
+<h3>Built-in Patterns</h3>
+<table>
+  <tr><th>Pattern</th><th>Steps</th><th>Character</th></tr>
+  <tr><td><strong>Default</strong></td><td>12</td><td>Standard beat with regular hi-hat offbeat.</td></tr>
+  <tr><td><strong>Four on Ice</strong></td><td>16</td><td>Four-on-the-floor kick with sparse hi-hat accents.</td></tr>
+  <tr><td><strong>Ghost Drift</strong></td><td>16</td><td>Sparse, broken feel. Floating ghost notes.</td></tr>
+  <tr><td><strong>Rose's Waltz</strong></td><td>12</td><td>3/4 waltz-like grouping. Elegant, flowing.</td></tr>
+  <tr><td><strong>Asymmetry</strong></td><td>16</td><td>Irregular accents across kick and snare. Off-kilter groove.</td></tr>
+  <tr><td><strong>Deep Glitch</strong></td><td>16</td><td>Dense, overlapping hits. Chaotic, glitchy texture.</td></tr>
+</table>
 
 <h3>Controls</h3>
 <ul>
@@ -431,12 +551,19 @@ T(D,N) LEAP mode:
 
 <hr class="divider">
 
+<!-- ── BPM ── -->
+<h2 id="bpm">12. BPM Display</h2>
+
+<p>The header bar shows an estimated tempo in the format <span class="label label-warn">~ 120 TEMPO</span>. This is calculated from the average interval between recent note triggers. Because timing in this instrument is spatial rather than clock-based, the BPM fluctuates with cursor speed, Field Drag energy, and step size. It serves as a reference, not a fixed metronome.</p>
+
+<hr class="divider">
+
 <div class="box chord">
   <strong>Note on timing:</strong> Drum steps and note triggers are tied together — each note trigger advances the drum sequencer by one step. This means the drum pattern tempo is entirely determined by your cursor movement speed and the kinetic step size, not by a clock. This is fundamental to T(D,N): time is spatial, not metronomic.
 </div>
 
 <p style="margin-top:32px;font-size:12px;color:var(--text-dim);font-style:italic">
-  IcefaceTDN Beat Machine — Iceface Toy &nbsp;·&nbsp; 2025
+  TDN Geo-Rotating Arpeggiator &nbsp;—&nbsp; Iceface Toys &nbsp;&middot;&nbsp; 2025
 </p>
 
 </div>
