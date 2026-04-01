@@ -1,23 +1,22 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>IcefaceTDN Beat Machine</title>
+<title>TDN Geo-Rotating Arpeggiator — Iceface Toys</title>
 <style>
 :root {
-  --bg: #FAF7F5;
+  --bg: #F4F5F7;
   --surface: #FFFFFF;
-  --surface-alt: #F0ECEB;
-  --border: #D5CFCC;
-  --text: #2A2523;
-  --text-dim: #8A8280;
-  --text-second: #6A6563;
-  --accent: #C76B6B;
+  --surface-alt: #EAECEF;
+  --border: #CCCFD4;
+  --text: #23262B;
+  --text-dim: #82858A;
+  --text-second: #63666B;
+  --accent: #E8A0BE;
   --chord: #6B9FC7;
   --warning: #C7A06B;
-  --active: #7BC76B;
+  --active: #A0D4E8;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
@@ -94,7 +93,7 @@ select {
   transition: all 0.15s;
 }
 .mode-btn:hover { background: var(--surface-alt); }
-.mode-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+.mode-btn.active { background: var(--accent); color: #3A2030; border-color: var(--accent); }
 
 .controls {
   border-top: 1px solid var(--border);
@@ -113,7 +112,7 @@ select {
   display: flex; align-items: center; justify-content: center;
   font-size: 7px; font-weight: 700; cursor: pointer; transition: background 0.1s;
 }
-.drum-cell.active-k { background: var(--accent); color: white; border-color: var(--accent); }
+.drum-cell.active-k { background: var(--accent); color: #3A2030; border-color: var(--accent); }
 .drum-cell.active-s { background: var(--chord); color: white; border-color: var(--chord); }
 .drum-cell.active-h { background: var(--warning); color: white; border-color: var(--warning); }
 .drum-cell.current { box-shadow: inset 0 0 0 2px var(--active); }
@@ -336,13 +335,14 @@ input[type="range"] {
 <body>
 
 <div class="header">
-  <h1>ICEFACETDN BEAT MACHINE</h1>
+  <h1>TDN GEO-ROTATING ARPEGGIATOR</h1>
   <div class="info">
     <a href="index_walk.html" style="font-family:inherit;font-size:8px;font-weight:700;color:var(--warning);text-decoration:none;padding:3px 7px;border:1px solid var(--warning);border-radius:3px;">WALK MODE</a>
     <a href="manual_ja.html" target="_blank" style="font-family:inherit;font-size:8px;font-weight:700;color:var(--text-dim);text-decoration:none;padding:3px 7px;border:1px solid var(--border);border-radius:3px;">MANUAL</a>
     <span id="noteInfo">--</span>
     <span id="bpmInfo" style="font-family:inherit;font-size:9px;font-weight:700;color:var(--warning);padding:2px 6px;background:var(--surface-alt);border:1px solid var(--border);border-radius:3px;">-- TEMPO</span>
     <span id="modeInfo">T(D,N)</span>
+    <span style="font-family:inherit;font-size:9px;font-weight:900;color:var(--accent);letter-spacing:1px;margin-left:auto;">Iceface Toys</span>
   </div>
 </div>
 
@@ -355,8 +355,8 @@ input[type="range"] {
 
   <div class="sidebar">
     <div class="section" style="background:var(--accent); border-color:var(--accent); margin-bottom:6px;">
-      <div class="section-label" style="color:white; opacity:0.8; margin-bottom:4px;">GLOBAL PRESET</div>
-      <select id="globalPreset" style="width:100%; border:none; background:rgba(255,255,255,0.2); color:white; font-weight:bold; cursor:pointer; height:24px; outline:none;">
+      <div class="section-label" style="color:#3A2030; opacity:0.8; margin-bottom:4px;">GLOBAL PRESET</div>
+      <select id="globalPreset" style="width:100%; border:none; background:rgba(255,255,255,0.3); color:#3A2030; font-weight:bold; cursor:pointer; height:24px; outline:none;">
         <option value="" style="color:var(--text)">-- CUSTOM / MANUAL --</option>
       </select>
     </div>
@@ -364,7 +364,7 @@ input[type="range"] {
     <div class="section">
       <div class="section-label">TRANSPORT</div>
       <div class="row" style="gap:4px">
-        <button class="mode-btn" id="btnPlay" style="background:var(--active);color:white;border-color:var(--active);flex:1">&#9654; PLAY</button>
+        <button class="mode-btn" id="btnPlay" style="background:var(--active);color:#1A3A4A;border-color:var(--active);flex:1">&#9654; PLAY</button>
         <button class="mode-btn" id="btnStop" style="flex:1;display:none">&#9632; STOP</button>
         <select id="patternSelect" style="flex:2"></select>
       </div>
@@ -638,7 +638,6 @@ function applyGlobalPreset(p) {
     if(btn) btn.classList.toggle('active', dd.toLowerCase() === p.dir);
   });
   
-  // Set the select name but don't re-trigger
   const gpSel = $('globalPreset');
   for (let i = 0; i < gpSel.options.length; i++) {
     if (gpSel.options[i].value === Object.keys(GLOBAL_PRESETS).find(key => GLOBAL_PRESETS[key] === p)) {
@@ -650,7 +649,6 @@ function applyGlobalPreset(p) {
   buildNoteArray();
 }
 
-// Track manual changes to reset the selector to "Custom"
 function markCustom() {
   $('globalPreset').value = "";
 }
@@ -706,9 +704,9 @@ const DRUM_PRESETS = {
   ],
   'Asymmetry': [
     {k:1,s:0,h:1},{k:0,s:0,h:0},{k:0,s:0,h:0},{k:0,s:1,h:1},
-    {k:1,s:0,h:0},{k:0,s:1,h:1},{k:0,s:0,h:0},{k:0,s:0,h:1}, // index 4 (beat 5) has s:0
+    {k:1,s:0,h:0},{k:0,s:1,h:1},{k:0,s:0,h:0},{k:0,s:0,h:1},
     {k:1,s:1,h:0},{k:1,s:0,h:0},{k:0,s:1,h:1},{k:0,s:0,h:0},
-    {k:1,s:0,h:1},{k:1,s:1,h:0},{k:0,s:0,h:1},{k:0,s:0,h:0}, // index 12 (beat 13) has s:0
+    {k:1,s:0,h:1},{k:1,s:1,h:0},{k:0,s:0,h:1},{k:0,s:0,h:0},
   ],
   'Deep Glitch': [
     {k:1,s:1,h:0},{k:0,s:0,h:1},{k:0,s:1,h:1},{k:1,s:0,h:0},
@@ -768,7 +766,7 @@ let synthCurrentFreq = 440, synthTargetFreq = 440;
 let glideTimer = null;
 
 // BPM estimation
-let triggerTimestamps = [];  // last 12 trigger times (ms)
+let triggerTimestamps = [];
 let estimatedBPM = 0;
 let bpmUpdateTimer = 0;
 
@@ -952,7 +950,6 @@ function getFieldWarpState() {
 
 // ── Populate all <select> elements ──
 function populateSelects() {
-  // Scales
   const scSel = $('scaleSelect');
   SCALES.forEach((s, i) => {
     const opt = document.createElement('option');
@@ -961,7 +958,6 @@ function populateSelects() {
     scSel.appendChild(opt);
   });
 
-  // Tunings
   const tuSel = $('tuningSelect');
   TUNINGS.forEach((t, i) => {
     const opt = document.createElement('option');
@@ -970,7 +966,6 @@ function populateSelects() {
     tuSel.appendChild(opt);
   });
 
-  // Base note (C2 to C6)
   const bnSel = $('baseNote');
   for (let n = 36; n <= 84; n++) {
     const opt = document.createElement('option');
@@ -980,7 +975,6 @@ function populateSelects() {
     bnSel.appendChild(opt);
   }
 
-  // Octave spread
   const osSel = $('octaveSpread');
   for (let o = 1; o <= 4; o++) {
     const opt = document.createElement('option');
@@ -989,7 +983,6 @@ function populateSelects() {
     osSel.appendChild(opt);
   }
 
-  // Waveform
   const wfSel = $('waveform');
   ['sine','triangle','square','sawtooth'].forEach((w, i) => {
     const opt = document.createElement('option');
@@ -998,7 +991,6 @@ function populateSelects() {
     wfSel.appendChild(opt);
   });
 
-  // Octave shift
   const shSel = $('octaveShift');
   for (let s = -2; s <= 2; s++) {
     const opt = document.createElement('option');
@@ -1007,14 +999,13 @@ function populateSelects() {
     shSel.appendChild(opt);
   }
 
-  // Drum presets
   const dpSel = $('drumPreset');
   Object.keys(DRUM_PRESETS).forEach(name => {
     const opt = document.createElement('option');
     opt.value = name; opt.textContent = name;
     dpSel.appendChild(opt);
   });
-  // Global Presets
+
   const gpSel = $('globalPreset');
   Object.keys(GLOBAL_PRESETS).forEach(name => {
     const opt = document.createElement('option');
@@ -1025,7 +1016,6 @@ function populateSelects() {
     if (gpSel.value) applyGlobalPreset(GLOBAL_PRESETS[gpSel.value]);
   });
 
-  // Add "markCustom" to all inputs
   document.querySelectorAll('input, select:not(#globalPreset), .mode-btn').forEach(el => {
     el.addEventListener('click', markCustom);
     el.addEventListener('input', markCustom);
@@ -1033,7 +1023,7 @@ function populateSelects() {
   });
 }
 
-// ── Audio Init (must be inside user gesture) ──
+// ── Audio Init ──
 function initAudio() {
   if (audioCtx) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -1045,7 +1035,6 @@ function initAudio() {
   masterGain.gain.value = 0.7;
   masterGain.connect(audioCtx.destination);
 
-  // Synth chain: osc → filter → gain → master
   synthFilterNode = audioCtx.createBiquadFilter();
   synthFilterNode.type = 'lowpass';
   synthFilterNode.frequency.value = 8000;
@@ -1057,10 +1046,9 @@ function initAudio() {
   synthFilterNode.connect(synthGainNode);
   synthGainNode.connect(masterGain);
 
-  // Add lush algorithmic reverb for the synth
   synthReverbNode = audioCtx.createConvolver();
   const rate = audioCtx.sampleRate;
-  const length = rate * 2.5; // 2.5s tail
+  const length = rate * 2.5;
   const buffer = audioCtx.createBuffer(2, length, rate);
   for (let i = 0; i < length; i++) {
     const decay = Math.exp(-i / (rate * 0.7));
@@ -1082,7 +1070,6 @@ function initAudio() {
   currentOsc.connect(synthFilterNode);
   currentOsc.start();
 
-  // Drum chain: gain → filter → master
   drumGainNode = audioCtx.createGain();
   drumGainNode.gain.value = 0.5;
 
@@ -1094,7 +1081,6 @@ function initAudio() {
   drumGainNode.connect(drumFilterNode2);
   drumFilterNode2.connect(masterGain);
 
-  // Glide update at ~200Hz
   glideTimer = setInterval(updateGlide, 5);
 
   console.log('Audio initialized, sampleRate:', audioCtx.sampleRate);
@@ -1141,23 +1127,19 @@ function playSynthNote(note, velocityMod = 1.0, cutoffMod = 1.0, extraPitchCents
   if (!audioCtx) return;
   synthTargetFreq = midiToFreq(note, extraPitchCents);
   
-  // ベースとなる設定値を取得
   const baseVolume = val('synthVol') / 100;
   const baseCutoff = val('cutoff') / 100;
   const reso = val('resonance') / 100;
 
-  // Nパラメータによる動的なモジュレーションを適用
   const finalVolume = baseVolume * velocityMod;
   const finalCutoff = baseCutoff * cutoffMod;
 
-  // カットオフの変化幅をさらに拡大 (最低周波数を下げる)
   const cutoffHz = Math.min(20 + 80 * Math.pow(300, finalCutoff), audioCtx.sampleRate * 0.45);
   const now = audioCtx.currentTime;
 
-  // エンベロープの時間をvelocityModに連動させる（Z-Depth 100% 時のアタック遅延効果を25%に弱める: 0.08 -> 0.02）
-  const attackTime = 0.005 + (1.0 - velocityMod) * 0.02; // 0.005s 〜 0.025s
-  const sustainTime = 0.05 + velocityMod * 0.07; // 0.05s 〜 0.12s
-  const releaseTime = 0.03 + velocityMod * 0.12; // 0.03s 〜 0.15s
+  const attackTime = 0.005 + (1.0 - velocityMod) * 0.02;
+  const sustainTime = 0.05 + velocityMod * 0.07;
+  const releaseTime = 0.03 + velocityMod * 0.12;
 
   synthFilterNode.frequency.setTargetAtTime(cutoffHz, now, attackTime);
   synthFilterNode.Q.setTargetAtTime(0.5 + reso * 20, now, 0.01);
@@ -1165,7 +1147,6 @@ function playSynthNote(note, velocityMod = 1.0, cutoffMod = 1.0, extraPitchCents
   const wave = $('waveform').value;
   if (currentOsc.type !== wave) currentOsc.type = wave;
 
-  // Attack → sustain → release
   synthGainNode.gain.cancelScheduledValues(now);
   synthGainNode.gain.setValueAtTime(synthGainNode.gain.value, now);
   synthGainNode.gain.linearRampToValueAtTime(finalVolume * 0.4, now + attackTime);
@@ -1528,15 +1509,18 @@ function drawAutoOrbitTrail(w, h, warp, now) {
     const prev = autoVisualTrail[i - 1];
     const curr = autoVisualTrail[i];
     const age = (now - curr.birth) / 1300;
-    const alpha = Math.max(0, 0.24 * (1 - age));
+    // ★ trail alpha at 0.82
+    const alpha = Math.max(0, 0.82 * (1 - age));
     if (alpha <= 0.003) continue;
     const prevY = (prev.y + (prev.yScreenOffset || 0)) * h;
     const currY = (curr.y + (curr.yScreenOffset || 0)) * h;
     ctx.beginPath();
     ctx.moveTo(prev.x * w, prevY);
     ctx.lineTo(curr.x * w, currY);
-    ctx.strokeStyle = `rgba(199,160,107,${Math.min(0.95, alpha + (curr.brightness || 0) * 0.18)})`;
-    ctx.lineWidth = (1.1 + curr.lift * 1.2) * (0.92 + (curr.scale || 1) * 0.18);
+    // ★ trail color - blue
+    ctx.strokeStyle = `rgba(91,175,218,${Math.min(0.95, alpha * 1.2 + (curr.brightness || 0) * 0.25)})`;
+    // ★ CHANGED: trail line width slightly thicker
+    ctx.lineWidth = (2.0 + curr.lift * 1.6) * (0.92 + (curr.scale || 1) * 0.22);
     ctx.stroke();
   }
   ctx.restore();
@@ -1588,13 +1572,13 @@ function drawAutoOrbitPrediction(w, h, warp) {
     const prev = pts[i - 1];
     const curr = pts[i];
     const fade = Math.max(0, 1 - curr.t);
-    const alpha = 0.24 * fade * fade;
+    const alpha = 0.65 * fade * fade;
     if (alpha <= 0.003) continue;
     ctx.beginPath();
     ctx.moveTo(prev.x, prev.y);
     ctx.lineTo(curr.x, curr.y);
-    ctx.strokeStyle = `rgba(106,159,199,${Math.min(0.9, alpha + (curr.brightness || 0) * 0.16)})`;
-    ctx.lineWidth = (1.0 + fade * 1.2 + curr.lift * 0.8) * (0.92 + (curr.scale || 1) * 0.14);
+    ctx.strokeStyle = `rgba(106,159,199,${Math.min(0.95, alpha + (curr.brightness || 0) * 0.20)})`;
+    ctx.lineWidth = (1.3 + fade * 1.4 + curr.lift * 0.8) * (0.92 + (curr.scale || 1) * 0.16);
     ctx.stroke();
   }
 
@@ -1602,10 +1586,10 @@ function drawAutoOrbitPrediction(w, h, warp) {
   for (let i = 0; i < pts.length; i += 7) {
     const p = pts[i];
     const fade = Math.max(0, 1 - p.t);
-    const alpha = 0.10 + fade * 0.10;
-    ctx.fillStyle = `rgba(106,159,199,${Math.min(0.95, alpha + (p.brightness || 0) * 0.22)})`;
+    const alpha = 0.30 + fade * 0.25;
+    ctx.fillStyle = `rgba(106,159,199,${Math.min(0.95, alpha + (p.brightness || 0) * 0.25)})`;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, (1.4 + fade * 1.0) * (0.90 + (p.scale || 1) * 0.16), 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, (1.8 + fade * 1.2) * (0.90 + (p.scale || 1) * 0.18), 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -1696,16 +1680,16 @@ function drawClothMesh(w, h, warp) {
   ctx.save();
 
   const baseGrad = ctx.createLinearGradient(0, 0, 0, h);
-  baseGrad.addColorStop(0, 'rgba(255,252,248,0.92)');
-  baseGrad.addColorStop(0.48, 'rgba(246,240,236,0.95)');
-  baseGrad.addColorStop(1, 'rgba(233,226,222,0.98)');
+  baseGrad.addColorStop(0, 'rgba(255,255,255,0.95)');
+  baseGrad.addColorStop(0.48, 'rgba(252,253,255,0.96)');
+  baseGrad.addColorStop(1, 'rgba(248,249,252,0.98)');
   ctx.fillStyle = baseGrad;
   ctx.fillRect(0, 0, w, h);
 
   const sheenGrad = ctx.createLinearGradient(0, 0, w, h);
-  sheenGrad.addColorStop(0, 'rgba(255,255,255,0.10)');
-  sheenGrad.addColorStop(0.48, 'rgba(255,248,240,0.02)');
-  sheenGrad.addColorStop(1, 'rgba(180,160,145,0.06)');
+  sheenGrad.addColorStop(0, 'rgba(255,255,255,0.08)');
+  sheenGrad.addColorStop(0.48, 'rgba(250,252,255,0.02)');
+  sheenGrad.addColorStop(1, 'rgba(200,205,210,0.04)');
   ctx.fillStyle = sheenGrad;
   ctx.fillRect(0, 0, w, h);
 
@@ -1750,9 +1734,9 @@ function drawClothMesh(w, h, warp) {
       const warm = avgWeave - 0.5;
       const sheen = avgThread - 0.5;
       const liftShade = avgLift * (0.12 + energy * 0.20) + avgLocal * 0.08;
-      const r = Math.round(246 - liftShade * 36 + warm * 11 + sheen * 7);
-      const g = Math.round(239 - liftShade * 28 + warm * 8 + sheen * 5);
-      const b = Math.round(234 - liftShade * 22 + warm * 5 + sheen * 3);
+      const r = Math.round(250 - liftShade * 20 + warm * 5 + sheen * 3);
+      const g = Math.round(251 - liftShade * 18 + warm * 4 + sheen * 3);
+      const b = Math.round(253 - liftShade * 14 + warm * 3 + sheen * 2);
       const alpha = 0.34 + avgLift * 0.12 + avgLocal * 0.06;
 
       ctx.beginPath();
@@ -1880,7 +1864,7 @@ function drawClothMesh(w, h, warp) {
     ctx.fillStyle = pinchGlow;
     ctx.fillRect(0, 0, w, h);
 
-    ctx.strokeStyle = `rgba(118,171,110,${0.22 + energy * 0.14})`;
+    ctx.strokeStyle = `rgba(160,212,232,${0.32 + energy * 0.18})`;
     ctx.lineWidth = 0.9;
     ctx.beginPath();
     ctx.arc(ax * w, ay * h, 5.2, 0, Math.PI * 2);
@@ -1891,7 +1875,7 @@ function drawClothMesh(w, h, warp) {
     ctx.arc(px * w, py * h, 3.1 + energy * 0.7, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = `rgba(123,199,107,${0.66 + energy * 0.16})`;
+    ctx.fillStyle = `rgba(160,212,232,${0.72 + energy * 0.18})`;
     ctx.beginPath();
     ctx.arc(cx * w, cy * h, 4.2 + energy * 2.0, 0, Math.PI * 2);
     ctx.fill();
@@ -1925,7 +1909,7 @@ function render() {
 
     if (depthAlpha > 0.1) {
       ctx.globalAlpha = depthAlpha * 0.8;
-      ctx.fillStyle = '#2A2523';
+      ctx.fillStyle = '#23262B';
       const fontSize = Math.max(5, Math.floor(5 + 5 * vMod));
       ctx.font = `bold ${fontSize}px monospace`;
       ctx.textAlign = 'center';
@@ -1940,31 +1924,27 @@ function render() {
   if (autoPlaying) {
     const orb = getPinchedOrbDisplay(mousePos.x, mousePos.y, warp, 1.0);
     const cx = orb.x * w, cy = (orb.y + (orb.yScreenOffset || 0)) * h;
-    ctx.globalAlpha = 0.16 + (orb.brightness || 0) * 0.24;
-    ctx.strokeStyle = '#C7A06B';
-    ctx.lineWidth = 0.75;
-    ctx.beginPath();
-    ctx.moveTo(cx, 0); ctx.lineTo(cx, h);
-    ctx.moveTo(0, cy); ctx.lineTo(w, cy);
-    ctx.stroke();
 
+    // ★ Aura - pastel blue
     const aura = ctx.createRadialGradient(cx, cy, 0, cx, cy, (16 + orb.lift * 20) * (orb.scale || 1));
-    aura.addColorStop(0, `rgba(255,236,206,${0.20 + (orb.brightness || 0) * 0.55})`);
-    aura.addColorStop(1, 'rgba(255,236,206,0)');
+    aura.addColorStop(0, `rgba(130,200,235,${0.55 + (orb.brightness || 0) * 0.40})`);
+    aura.addColorStop(1, 'rgba(130,200,235,0.03)');
     ctx.globalAlpha = 1;
     ctx.fillStyle = aura;
     ctx.beginPath();
     ctx.arc(cx, cy, (16 + orb.lift * 20) * (orb.scale || 1), 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.94;
-    ctx.fillStyle = '#E6BF8A';
+    // ★ Orb fill - blue
+    ctx.globalAlpha = 1.0;
+    ctx.fillStyle = '#5BAFDA';
     ctx.beginPath();
-    ctx.arc(cx, cy, (5.4 + orb.lift * 1.6) * (orb.scale || 1), 0, Math.PI * 2);
+    ctx.arc(cx, cy, (6.2 + orb.lift * 1.8) * (orb.scale || 1), 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.75;
-    ctx.fillStyle = `rgba(255,255,255,${0.28 + (orb.brightness || 0) * 0.65})`;
+    // ★ Highlight spec - white on blue
+    ctx.globalAlpha = 0.80;
+    ctx.fillStyle = `rgba(220,245,255,${0.60 + (orb.brightness || 0) * 0.35})`;
     ctx.beginPath();
     ctx.arc(cx - (1.6 + orb.lift * 0.8), cy - (2.0 + orb.lift * 0.8), (1.8 + orb.lift * 0.55) * (0.95 + (orb.scale || 1) * 0.12), 0, Math.PI * 2);
     ctx.fill();
@@ -2036,7 +2016,6 @@ window.addEventListener('touchcancel', onPointerUp, { passive: true });
 
 // ── UI Events ──
 
-// Timing mode
 $('btnTDN').addEventListener('click', () => {
   timingMode = 'tdn';
   $('btnTDN').classList.add('active');
@@ -2050,7 +2029,6 @@ $('btnLeap').addEventListener('click', () => {
   $('modeInfo').textContent = 'T(D,N) LEAP';
 });
 
-// Direction
 ['Up','Down','Bounce','Random'].forEach(d => {
   $('dir' + d).addEventListener('click', () => {
     direction = d.toLowerCase();
@@ -2061,7 +2039,6 @@ $('btnLeap').addEventListener('click', () => {
   });
 });
 
-// Slider displays
 function bindSlider(id, displayId, fmt) {
   $(id).addEventListener('input', () => {
     $(displayId).textContent = fmt($(id).value);
@@ -2086,7 +2063,6 @@ bindSlider('drumVol', 'drumVolVal', v => v + '%');
 bindSlider('drumFilter', 'drumFilterVal', v => v + '%');
 bindSlider('stepSize', 'stepVal', v => (v / 1000).toFixed(3));
 
-// Drum volume/filter real-time
 $('drumVol').addEventListener('input', () => {
   if (drumGainNode) drumGainNode.gain.value = val('drumVol') / 100;
 });
@@ -2097,7 +2073,6 @@ $('drumFilter').addEventListener('input', () => {
   }
 });
 
-// Tuning auto-link
 $('tuningSelect').addEventListener('change', () => {
   const tuning = TUNINGS[val('tuningSelect')];
   if (tuning.iceface) {
@@ -2114,12 +2089,10 @@ $('tuningSelect').addEventListener('change', () => {
   buildNoteArray();
 });
 
-// Scale/base/octave change → rebuild
 ['scaleSelect', 'baseNote', 'octaveSpread'].forEach(id => {
   $(id).addEventListener('change', buildNoteArray);
 });
 
-// Drum preset
 $('drumPreset').addEventListener('change', () => {
   const name = $('drumPreset').value;
   drumPattern = JSON.parse(JSON.stringify(DRUM_PRESETS[name] || DRUM_PRESETS['Default']));
@@ -2254,21 +2227,18 @@ const GEO_PATTERNS = {
     };
   })(),
   'Trefoil': (t) => {
-    // 3D trefoil knot projected to 2D
     const x = Math.sin(t) + 2 * Math.sin(2 * t);
     const y = Math.cos(t) - 2 * Math.cos(2 * t);
     const r = 3.2;
     return { x: 0.5 + x / r * 0.42, y: 0.5 + y / r * 0.42 };
   },
   'Hypotrochoid': (t) => {
-    // R=5, r=3, d=5
     const R = 5, r = 3, d = 4.5;
     const x = (R - r) * Math.cos(t) + d * Math.cos((R - r) / r * t);
     const y = (R - r) * Math.sin(t) - d * Math.sin((R - r) / r * t);
     return { x: 0.5 + x / 10 * 0.42, y: 0.5 + y / 10 * 0.42 };
   },
   'Epitrochoid': (t) => {
-    // R=3, r=1, d=2.5
     const R = 3, r = 1, d = 2.5;
     const x = (R + r) * Math.cos(t) - d * Math.cos((R + r) / r * t);
     const y = (R + r) * Math.sin(t) - d * Math.sin((R + r) / r * t);
@@ -2402,11 +2372,9 @@ function autoTick() {
   }
 }
 
-// Play/Stop buttons
 $('btnPlay').addEventListener('click', startAutoPlay);
 $('btnStop').addEventListener('click', stopAutoPlay);
 
-// Pattern select
 const patSel = $('patternSelect');
 Object.keys(GEO_PATTERNS).forEach(name => {
   const opt = document.createElement('option');
@@ -2418,7 +2386,6 @@ patSel.addEventListener('change', () => {
   currentPatternName = patSel.value;
 });
 
-// Speed slider
 bindSlider('autoSpeed', 'autoSpeedVal', v => v);
 
 // ── Init ──
