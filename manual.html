@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IcefaceTDN Beat Machine — Manual</title>
+<style>
+:root {
+  --bg: #FAF7F5;
+  --surface: #FFFFFF;
+  --surface-alt: #F0ECEB;
+  --border: #D5CFCC;
+  --text: #2A2523;
+  --text-dim: #8A8280;
+  --accent: #C76B6B;
+  --chord: #6B9FC7;
+  --warning: #C7A06B;
+  --active: #7BC76B;
+  --iceface: #B359E6;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Georgia', serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.8;
+  font-size: 15px;
+}
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+}
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 100;
+}
+.topbar-title {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--text);
+}
+.topbar a {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 4px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+}
+.topbar a:hover { background: var(--accent); color: white; }
+.content { margin-top: 56px; }
+
+h1 {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.subtitle {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 40px;
+  font-style: italic;
+}
+h2 {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-top: 44px;
+  margin-bottom: 16px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+h3 {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+p { margin-bottom: 14px; color: var(--text); }
+p + p { margin-top: -4px; }
+ul, ol { margin: 0 0 14px 20px; }
+li { margin-bottom: 6px; }
+
+.label {
+  display: inline-block;
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+.label-accent { background: var(--accent); color: white; }
+.label-chord  { background: var(--chord);  color: white; }
+.label-warn   { background: var(--warning); color: white; }
+.label-active { background: var(--active); color: white; }
+.label-ice    { background: var(--iceface); color: white; }
+.label-dim    { background: var(--surface-alt); color: var(--text-dim); border: 1px solid var(--border); }
+
+.box {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-size: 14px;
+}
+.box.accent { border-left: 3px solid var(--accent); }
+.box.iceface { border-left: 3px solid var(--iceface); }
+.box.chord  { border-left: 3px solid var(--chord); }
+
+.formula {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 12px 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--accent);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 13px;
+}
+th {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 6px 10px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  text-align: left;
+}
+td {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: var(--surface-alt); }
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 40px 0;
+}
+
+code {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 12px;
+  background: var(--surface-alt);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--accent);
+}
+
+.toc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin-bottom: 40px;
+}
+.toc h4 {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.toc ol { margin: 0 0 0 16px; }
+.toc li { margin-bottom: 4px; font-size: 13px; }
+.toc a { color: var(--chord); text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-title">ICEFACETDN BEAT MACHINE — MANUAL</span>
+  <a href="manual_ja.html" style="color:var(--text-dim);border-color:var(--border)">日本語</a>
+  <a href="index.html">&#9654; OPEN APP</a>
+</div>
+
+<div class="page">
+<div class="content">
+
+<h1>IcefaceTDN Beat Machine</h1>
+<p class="subtitle">A kinetic music instrument based on the T(D,N) Relational-Temporal transformation.</p>
+
+<div class="toc">
+  <h4>CONTENTS</h4>
+  <ol>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#playing">How to Play</a></li>
+    <li><a href="#tdn">T(D,N) — The Core Principle</a></li>
+    <li><a href="#scale-tuning">Scale & Tuning</a></li>
+    <li><a href="#synth">Synth</a></li>
+    <li><a href="#drums">Drums</a></li>
+    <li><a href="#direction">Direction</a></li>
+    <li><a href="#kinetic">Kinetic Parameters</a></li>
+    <li><a href="#drum-pattern">Drum Pattern Grid</a></li>
+  </ol>
+</div>
+
+<!-- ── Overview ── -->
+<h2 id="overview">1. Overview</h2>
+
+<p>IcefaceTDN Beat Machine is a kinetic music instrument. Notes are not triggered by pressing keys — they are triggered by <strong>movement</strong>. The distance your cursor travels across the canvas determines when the next note fires.</p>
+
+<p>The instrument is built around a single theoretical principle: <strong>T(D,N)</strong>, a dual transformation that simultaneously alters both the timing and pitch of non-diatonic notes based on a single parameter, <em>N</em>.</p>
+
+<div class="box accent">
+  At N = 1.0, the instrument behaves like standard equal temperament — all notes are equal in both pitch and timing. As N decreases toward 0, non-diatonic notes (black keys) become both shorter in duration and closer in pitch to their diatonic neighbors.
+</div>
+
+<!-- ── How to Play ── -->
+<h2 id="playing">2. How to Play</h2>
+
+<h3>Auto Play</h3>
+<p>Click the <span class="label label-active">▶ PLAY</span> button in the sidebar. The cursor follows a geometric path automatically. Select the path shape from the dropdown next to the Play button. Adjust <strong>Speed</strong> to control how fast the cursor moves.</p>
+
+<h3>Manual Play</h3>
+<p>Click and drag anywhere on the canvas. Notes trigger as you move. The faster you move, the more notes fire in a given time. Releasing the mouse stops playback. Manual dragging will stop Auto Play.</p>
+
+<h3>Geometric Patterns</h3>
+<p>The auto-play cursor follows mathematical curves. Each curve has a different character:</p>
+
+<table>
+  <tr><th>Pattern</th><th>Character</th></tr>
+  <tr><td><code>Lissajous 3:2</code></td><td>Smooth figure-8 variant. Balanced, musical phrasing.</td></tr>
+  <tr><td><code>Circle</code></td><td>Constant velocity. Steady, meditative pulse.</td></tr>
+  <tr><td><code>Figure 8</code></td><td>Crossings create natural phrase breaks.</td></tr>
+  <tr><td><code>Rose r=cos(3t)</code></td><td>3-petal rose. Rhythmic groupings of three.</td></tr>
+  <tr><td><code>Rose r=cos(5t)</code></td><td>5-petal rose. Irregular, asymmetric flow.</td></tr>
+  <tr><td><code>Spiral</code></td><td>Grows outward then resets. Dynamic crescendo shape.</td></tr>
+  <tr><td><code>Pentagon</code></td><td>Linear segments with sharp corners. Percussive accent at each vertex.</td></tr>
+  <tr><td><code>Star</code></td><td>5-pointed star. Alternating long and short segments.</td></tr>
+  <tr><td><code>Breathing</code></td><td>Pulsing radius. Swells and shrinks organically.</td></tr>
+  <tr><td><code>Trefoil</code></td><td>Three-lobed knot projection. Dense, overlapping paths.</td></tr>
+  <tr><td><code>Hypotrochoid</code></td><td>Spirograph inner wheel. Complex, layered motion.</td></tr>
+  <tr><td><code>Epitrochoid</code></td><td>Spirograph outer wheel. Looping, expansive strokes.</td></tr>
+  <tr><td><code>Double Pendulum</code></td><td>Physics simulation. Chaotic, unpredictable — never repeats.</td></tr>
+  <tr><td><code>Random Walk</code></td><td>Brownian motion. Drifting, exploratory.</td></tr>
+</table>
+
+<!-- ── T(D,N) ── -->
+<h2 id="tdn">3. T(D,N) — The Core Principle</h2>
+
+<p>T(D,N) stands for <em>Temporal-Diatonic transformation with parameter N</em>. It is the defining characteristic of this instrument — a single slider that simultaneously controls two musical dimensions.</p>
+
+<h3>The Diatonic Reference Set D</h3>
+<p>D is the set of pitch classes corresponding to the white keys of a standard keyboard:</p>
+
+<div class="formula">D = { 0, 2, 4, 5, 7, 9, 11 }  →  C, D, E, F, G, A, B</div>
+
+<p>This is a topological reference, not a tonal scale. It defines which notes are <em>diatonic</em> (inside D) and which are <em>non-diatonic</em> (outside D — the black keys).</p>
+
+<h3>The N Parameter</h3>
+<p>N ranges from 0 to 1. It controls two things simultaneously for every non-diatonic note:</p>
+
+<table>
+  <tr><th>Dimension</th><th>Diatonic note</th><th>Non-diatonic note</th></tr>
+  <tr><td><strong>Time</strong> (step distance)</td><td>full stepSize</td><td>stepSize × N</td></tr>
+  <tr><td><strong>Pitch</strong> (cents offset)</td><td>0¢</td><td>+ (1 − N) × 100¢</td></tr>
+</table>
+
+<div class="box iceface">
+  <strong>Example — N = 0.5, Iceface Tuning:</strong><br>
+  A C# (non-diatonic) will fire after half the normal movement distance, and its pitch will be shifted +50 cents toward D. At the same time, the Iceface tuning preset shifts C# by +50¢ from its equal-tempered position.<br><br>
+  Both transformations converge at the same value — the pitch and time compression are unified by a single N.
+</div>
+
+<h3>T(D,N) Mode vs T(D,N) LEAP Mode</h3>
+
+<p><span class="label label-accent">T(D,N)</span> — The original transformation. Step timing is determined by the <em>identity</em> of the current note (is it in D or not?).</p>
+
+<p><span class="label label-dim">T(D,N) LEAP</span> — An extended mode. Step timing is determined by the <em>distance</em> (in semitones) between the current note and the previous note. Larger intervals get longer durations; adjacent notes move quickly.</p>
+
+<div class="formula">
+T(D,N) mode:
+  diatonic note    → stepSize × 1.0
+  non-diatonic     → stepSize × N
+
+T(D,N) LEAP mode:
+  interval = |current − previous| semitones
+  stretch  = 1.0 + (interval − 1) / 10      → 1st: 1.0×,  11th: 2.0×
+  step     = stepSize × (1 + (stretch−1) × N)
+</div>
+
+<p>In LEAP mode, N scales the degree of stretch. At N = 0, all steps are equal regardless of interval. At N = 1.0, large leaps breathe naturally while stepwise motion flows quickly — a principle common to expressive melodic performance.</p>
+
+<hr class="divider">
+
+<!-- ── Scale & Tuning ── -->
+<h2 id="scale-tuning">4. Scale & Tuning</h2>
+
+<h3>Scale</h3>
+<p>Defines which pitch classes are available as note sources. The selected scale, combined with the Base note and Octave spread, determines the full note array that the kinetic engine steps through.</p>
+
+<h3>Tuning</h3>
+<p>Applies microtonal offsets (in cents) to each pitch class, modifying intonation without changing the note names. When an <span class="label label-ice">ICEFACE</span> tuning is selected, N automatically sets to 0.5 and the scale switches to Chromatic, enabling the full T(D,N) transformation.</p>
+
+<p>Non-Iceface tunings (Equal, Just, Meantone, etc.) reset N to 1.0 and the scale to Major.</p>
+
+<h3>Base Note</h3>
+<p>The lowest note of the generated scale. The full note array spans upward from this note for the number of octaves specified.</p>
+
+<h3>Octaves</h3>
+<p>The number of octaves the note array covers. A wider spread gives a larger range and more variety in melodic movement.</p>
+
+<hr class="divider">
+
+<!-- ── Synth ── -->
+<h2 id="synth">5. Synth</h2>
+
+<h3>Wave</h3>
+<p>The oscillator waveform. Sine is the purest tone. Triangle is similar but slightly brighter. Square has strong odd harmonics — hollow and reedy. Sawtooth is the richest, with all harmonics present — the classic TB-303 basis.</p>
+
+<h3>Cutoff</h3>
+<p>Low-pass filter cutoff frequency. Lower values darken the tone; higher values open up the full harmonic content. The filter responds in real time as you adjust.</p>
+
+<h3>Resonance</h3>
+<p>Emphasis at the cutoff frequency. Higher values produce a pronounced peak — the characteristic "wah" of acid bass sounds. Extreme values can produce self-oscillation.</p>
+
+<h3>Glide (Portamento)</h3>
+<p>Smooths pitch transitions between notes. At 0, notes change instantly. As Glide increases, the oscillator slides from the previous pitch to the new one. Creates legato and TB-303-style portamento.</p>
+
+<h3>Octave</h3>
+<p>Shifts the entire note array up or down by octaves. −1 or −2 produces bass register sounds appropriate for bass lines and sub-bass.</p>
+
+<h3>Volume</h3>
+<p>The output level of the synthesizer voice.</p>
+
+<hr class="divider">
+
+<!-- ── Drums ── -->
+<h2 id="drums">6. Drums</h2>
+
+<p>The drum engine synthesizes three voices from scratch using the Web Audio API — no samples are used.</p>
+
+<table>
+  <tr><th>Voice</th><th>Synthesis</th></tr>
+  <tr><td><strong>K — Kick</strong></td><td>Pitch-swept sine wave (160Hz → 45Hz) with click transient. 0.4s decay.</td></tr>
+  <tr><td><strong>S — Snare</strong></td><td>Sine body + noise + snap oscillator + attack transient. 0.35s decay.</td></tr>
+  <tr><td><strong>H — Hi-hat</strong></td><td>Filtered white noise with fast exponential decay. 0.08s.</td></tr>
+</table>
+
+<p>Drum steps advance in sync with note triggers — each time the kinetic engine fires a note, the drum sequencer advances one step.</p>
+
+<h3>Volume</h3>
+<p>Master level for all drum voices.</p>
+
+<h3>Filter</h3>
+<p>Low-pass filter applied to the drum bus independently of the synth. Useful for dialing in the drum tone without affecting the melodic content.</p>
+
+<hr class="divider">
+
+<!-- ── Direction ── -->
+<h2 id="direction">7. Direction</h2>
+
+<p>Controls how the note index advances through the note array after each trigger.</p>
+
+<table>
+  <tr><th>Mode</th><th>Behavior</th></tr>
+  <tr><td><strong>UP</strong></td><td>Sequential ascending. Wraps from top back to bottom.</td></tr>
+  <tr><td><strong>DOWN</strong></td><td>Sequential descending. Wraps from bottom back to top.</td></tr>
+  <tr><td><strong>BOUNCE</strong></td><td>Ascends to the top of the array, then reverses and descends, continuously.</td></tr>
+  <tr><td><strong>RANDOM</strong></td><td>Each trigger picks a random note from the array. Combined with T(D,N) LEAP, produces interval-proportional timing even for unpredictable sequences.</td></tr>
+</table>
+
+<hr class="divider">
+
+<!-- ── Kinetic ── -->
+<h2 id="kinetic">8. Kinetic Parameters</h2>
+
+<h3>Step</h3>
+<p>The base distance threshold (in canvas-fraction units) that the cursor must travel before triggering the next note. Smaller values trigger notes more rapidly for the same cursor speed. This value is modified by T(D,N) for non-diatonic notes.</p>
+
+<h3>Speed</h3>
+<p>Only active during Auto Play. Controls how fast the cursor moves along the geometric path. At Speed = 60, the cursor moves at a moderate tempo. Increase for faster, denser playback; decrease for slower, spacious phrasing.</p>
+
+<hr class="divider">
+
+<!-- ── Drum Pattern Grid ── -->
+<h2 id="drum-pattern">9. Drum Pattern Grid</h2>
+
+<p>The drum pattern editor at the bottom of the screen shows three rows — <strong>K</strong> (Kick), <strong>S</strong> (Snare), <strong>H</strong> (Hi-hat) — across all pattern steps.</p>
+
+<h3>Editing</h3>
+<p>Click any cell to toggle it on or off. An active cell is highlighted in color. The currently playing step is marked with a green border.</p>
+
+<h3>Controls</h3>
+<ul>
+  <li><strong>Pattern dropdown</strong> — Load a built-in pattern.</li>
+  <li><span class="label label-dim">RANDOM</span> — Generate a random pattern. Kick: 30% probability per step, Snare: 20%, Hi-hat: 40%.</li>
+  <li><span class="label label-dim">CLEAR</span> — Silence all steps.</li>
+</ul>
+
+<h3>Pattern Length</h3>
+<p>Pattern length varies by preset (12 or 16 steps). The drum sequencer loops independently of the note array length, creating polyrhythmic relationships when the lengths differ.</p>
+
+<hr class="divider">
+
+<div class="box chord">
+  <strong>Note on timing:</strong> Drum steps and note triggers are tied together — each note trigger advances the drum sequencer by one step. This means the drum pattern tempo is entirely determined by your cursor movement speed and the kinetic step size, not by a clock. This is fundamental to T(D,N): time is spatial, not metronomic.
+</div>
+
+<p style="margin-top:32px;font-size:12px;color:var(--text-dim);font-style:italic">
+  IcefaceTDN Beat Machine — Iceface Toy &nbsp;·&nbsp; 2025
+</p>
+
+</div>
+</div>
+</body>
+</html>

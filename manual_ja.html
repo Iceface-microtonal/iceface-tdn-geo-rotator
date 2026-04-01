@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IcefaceTDN Beat Machine — マニュアル</title>
+<style>
+:root {
+  --bg: #FAF7F5;
+  --surface: #FFFFFF;
+  --surface-alt: #F0ECEB;
+  --border: #D5CFCC;
+  --text: #2A2523;
+  --text-dim: #8A8280;
+  --accent: #C76B6B;
+  --chord: #6B9FC7;
+  --warning: #C7A06B;
+  --active: #7BC76B;
+  --iceface: #B359E6;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.9;
+  font-size: 15px;
+}
+.page { max-width: 720px; margin: 0 auto; padding: 48px 32px 80px; }
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 10px 32px; display: flex; align-items: center;
+  justify-content: space-between; z-index: 100;
+}
+.topbar-title {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 11px; font-weight: 900; letter-spacing: 1px; color: var(--text);
+}
+.topbar-links { display: flex; gap: 8px; align-items: center; }
+.topbar a {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 9px; font-weight: 700; color: var(--accent); text-decoration: none;
+  padding: 4px 10px; border: 1px solid var(--accent); border-radius: 3px;
+}
+.topbar a:hover { background: var(--accent); color: white; }
+.topbar a.dim { color: var(--text-dim); border-color: var(--border); }
+.topbar a.dim:hover { background: var(--surface-alt); color: var(--text); }
+.content { margin-top: 56px; }
+h1 {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 22px; font-weight: 900; letter-spacing: 0.5px;
+  margin-bottom: 6px; color: var(--text);
+}
+.subtitle { font-size: 13px; color: var(--text-dim); margin-bottom: 40px; font-style: italic; }
+h2 {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 11px; font-weight: 900; letter-spacing: 2px; color: var(--text-dim);
+  text-transform: uppercase; margin-top: 44px; margin-bottom: 16px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+h3 {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 13px; font-weight: 700; color: var(--text); margin-top: 24px; margin-bottom: 8px;
+}
+p { margin-bottom: 14px; }
+ul, ol { margin: 0 0 14px 20px; }
+li { margin-bottom: 6px; }
+.label {
+  display: inline-block;
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 9px; font-weight: 700; padding: 2px 7px;
+  border-radius: 3px; letter-spacing: 0.5px; vertical-align: middle;
+}
+.label-accent { background: var(--accent); color: white; }
+.label-dim { background: var(--surface-alt); color: var(--text-dim); border: 1px solid var(--border); }
+.label-ice { background: var(--iceface); color: white; }
+.label-active { background: var(--active); color: white; }
+.box {
+  background: var(--surface-alt); border: 1px solid var(--border);
+  border-radius: 6px; padding: 16px 20px; margin: 16px 0; font-size: 14px;
+}
+.box.accent { border-left: 3px solid var(--accent); }
+.box.iceface { border-left: 3px solid var(--iceface); }
+.box.chord { border-left: 3px solid var(--chord); }
+.formula {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+  padding: 12px 16px; margin: 12px 0; font-size: 12px; line-height: 1.7; color: var(--accent);
+}
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+th {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 9px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text-dim);
+  padding: 6px 10px; background: var(--surface-alt);
+  border: 1px solid var(--border); text-align: left;
+}
+td { padding: 8px 10px; border: 1px solid var(--border); vertical-align: top; }
+tr:nth-child(even) td { background: var(--surface-alt); }
+.divider { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+code {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 12px; background: var(--surface-alt);
+  padding: 1px 5px; border-radius: 3px; color: var(--accent);
+}
+.toc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 16px 20px; margin-bottom: 40px;
+}
+.toc h4 {
+  font-family: 'SF Mono','Menlo','Consolas', monospace;
+  font-size: 9px; font-weight: 700; letter-spacing: 2px;
+  color: var(--text-dim); margin-bottom: 10px;
+}
+.toc ol { margin: 0 0 0 16px; }
+.toc li { margin-bottom: 4px; font-size: 13px; }
+.toc a { color: var(--chord); text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-title">ICEFACETDN BEAT MACHINE — マニュアル</span>
+  <div class="topbar-links">
+    <a href="manual.html" class="dim">EN</a>
+    <a href="index.html">&#9654; アプリを開く</a>
+  </div>
+</div>
+
+<div class="page"><div class="content">
+
+<h1>IcefaceTDN Beat Machine</h1>
+<p class="subtitle">T(D,N) リレーショナル・テンポラル変換に基づく、キネティック音楽楽器。</p>
+
+<div class="toc">
+  <h4>目次</h4>
+  <ol>
+    <li><a href="#overview">概要</a></li>
+    <li><a href="#playing">演奏方法</a></li>
+    <li><a href="#tdn">T(D,N) — 核心的な原理</a></li>
+    <li><a href="#scale-tuning">スケールとチューニング</a></li>
+    <li><a href="#synth">シンセサイザー</a></li>
+    <li><a href="#drums">ドラム</a></li>
+    <li><a href="#direction">方向（Direction）</a></li>
+    <li><a href="#kinetic">キネティック・パラメータ</a></li>
+    <li><a href="#drum-pattern">ドラムパターングリッド</a></li>
+  </ol>
+</div>
+
+<h2 id="overview">1. 概要</h2>
+
+<p>IcefaceTDN Beat Machine はキネティック音楽楽器です。キーを押して音を出すのではなく、<strong>動き</strong>によって音がトリガーされます。カーソルがキャンバス上を移動した距離が、次の音が鳴るタイミングを決定します。</p>
+
+<p>この楽器はひとつの理論的原理 <strong>T(D,N)</strong> に基づいています。T(D,N) とは、単一のパラメータ N によって、非ダイアトニック音（黒鍵）の<em>タイミング</em>と<em>ピッチ</em>を同時に変換する二重変換です。</p>
+
+<div class="box accent">
+  N = 1.0 のとき、楽器は標準の12平均律と同じ動作をします。N が 0 に近づくにつれ、非ダイアトニック音（黒鍵）は音価が短くなり、ピッチが隣のダイアトニック音（白鍵）に近づきます。
+</div>
+
+<h2 id="playing">2. 演奏方法</h2>
+
+<h3>自動再生（Auto Play）</h3>
+<p>サイドバーの <span class="label label-active">▶ PLAY</span> ボタンをクリックします。カーソルが幾何学パターンに沿って自動的に動き、音楽を生成します。横のドロップダウンでパターンの形を選んでください。<strong>Speed</strong> スライダーでカーソルの速度を調整します。</p>
+
+<h3>手動演奏（Manual Play）</h3>
+<p>キャンバス上でクリックしてドラッグします。動かすほど音がトリガーされます。速く動かすと音符が密になり、ゆっくり動かすとまばらになります。マウスを離すと停止します。手動操作中は Auto Play が停止します。</p>
+
+<h3>幾何学パターン一覧</h3>
+
+<table>
+  <tr><th>パターン</th><th>性格</th></tr>
+  <tr><td><code>Lissajous 3:2</code></td><td>なめらかな8の字変形。バランスのとれた音楽的フレージング。</td></tr>
+  <tr><td><code>Circle</code></td><td>等速円運動。安定した瞑想的なパルス。</td></tr>
+  <tr><td><code>Figure 8</code></td><td>交差点が自然なフレーズの区切りを生む。</td></tr>
+  <tr><td><code>Rose r=cos(3t)</code></td><td>3枚の花びら。3拍子的なグルーピング。</td></tr>
+  <tr><td><code>Rose r=cos(5t)</code></td><td>5枚の花びら。不規則で非対称な流れ。</td></tr>
+  <tr><td><code>Spiral</code></td><td>外側に広がってリセット。クレッシェンド形状。</td></tr>
+  <tr><td><code>Pentagon</code></td><td>直線セグメントと鋭い頂点。各頂点でパーカッシブなアクセント。</td></tr>
+  <tr><td><code>Star</code></td><td>5角星。長短交互のセグメント。</td></tr>
+  <tr><td><code>Breathing</code></td><td>半径が膨らんで縮む。有機的な呼吸感。</td></tr>
+  <tr><td><code>Trefoil</code></td><td>三つ葉のノット射影。密で重なり合う軌跡。</td></tr>
+  <tr><td><code>Hypotrochoid</code></td><td>内側スピログラフ。複雑で重層的な動き。</td></tr>
+  <tr><td><code>Epitrochoid</code></td><td>外側スピログラフ。ループし広がるストローク。</td></tr>
+  <tr><td><code>Double Pendulum</code></td><td>二重振り子の物理シミュレーション。カオス的で予測不能 — 同じ動きは二度と繰り返さない。</td></tr>
+  <tr><td><code>Random Walk</code></td><td>ブラウン運動。漂うような探索的な動き。</td></tr>
+</table>
+
+<h2 id="tdn">3. T(D,N) — 核心的な原理</h2>
+
+<p>T(D,N) は「パラメータ N によるテンポラル・ダイアトニック変換」を意味します。この楽器の定義的特徴であり、単一のスライダーが音楽の2つの次元を同時にコントロールします。</p>
+
+<h3>ダイアトニック参照集合 D</h3>
+<p>D は標準的なピアノの白鍵に対応するピッチクラスの集合です：</p>
+
+<div class="formula">D = { 0, 2, 4, 5, 7, 9, 11 }  →  C, D, E, F, G, A, B</div>
+
+<p>これは調性的なスケールではなく、位相的な参照集合です。どの音が<em>ダイアトニック</em>（白鍵）で、どの音が<em>非ダイアトニック</em>（黒鍵）かを定義します。</p>
+
+<h3>パラメータ N</h3>
+<p>N は 0 から 1 の範囲で、非ダイアトニック音に対して2つのことを同時に行います：</p>
+
+<table>
+  <tr><th>次元</th><th>ダイアトニック音（白鍵）</th><th>非ダイアトニック音（黒鍵）</th></tr>
+  <tr><td><strong>時間</strong>（ステップ距離）</td><td>通常の stepSize</td><td>stepSize × N</td></tr>
+  <tr><td><strong>ピッチ</strong>（セント補正）</td><td>0¢</td><td>+ (1 − N) × 100¢</td></tr>
+</table>
+
+<div class="box iceface">
+  <strong>例 — N = 0.5、Iceface チューニング：</strong><br>
+  C#（非ダイアトニック）は通常の半分の移動距離でトリガーされ、そのピッチは +50¢ だけ D に向かってシフトされます。同時に Iceface チューニングが C# を平均律の位置から +50¢ ずらしています。<br><br>
+  両方の変換が同じ値に収束します — ピッチと時間の圧縮が、単一の N によって統一されています。
+</div>
+
+<h3>T(D,N) モード vs T(D,N) LEAP モード</h3>
+
+<p><span class="label label-accent">T(D,N)</span> — オリジナルの変換。ステップのタイミングは現在の音の<em>属性</em>（D に属するかどうか）によって決まります。</p>
+
+<p><span class="label label-dim">T(D,N) LEAP</span> — 拡張モード。ステップのタイミングは現在の音と前の音の<em>距離</em>（半音数）によって決まります。大きな跳躍は長い音価を、隣接音は短い音価を得ます。</p>
+
+<div class="formula">
+T(D,N) モード:
+  ダイアトニック音    → stepSize × 1.0
+  非ダイアトニック音  → stepSize × N
+
+T(D,N) LEAP モード:
+  interval = |現在の音 − 前の音|  （半音数）
+  stretch  = 1.0 + (interval − 1) / 10    → 1度: 1.0×、11度: 2.0×
+  step     = stepSize × (1 + (stretch−1) × N)
+</div>
+
+<p>LEAP モードでは N がストレッチの強度をスケールします。N = 0 では全ステップが均等。N = 1.0 では大きな跳躍が自然に呼吸し、順次進行は素早く流れます。</p>
+
+<hr class="divider">
+
+<h2 id="scale-tuning">4. スケールとチューニング</h2>
+
+<h3>スケール（Scale）</h3>
+<p>音源として使用するピッチクラスを定義します。選択したスケール、Base ノート、オクターブ数の組み合わせが、キネティックエンジンがステップスルーする音列全体を決定します。</p>
+
+<h3>チューニング（Tuning）</h3>
+<p>各ピッチクラスにマイクロトーナルなセントオフセットを適用し、音名を変えずに音律を変更します。<span class="label label-ice">ICEFACE</span> 系チューニングを選択すると、N が自動的に 0.5 に設定され、スケールが Chromatic に切り替わります。非 Iceface 系チューニングでは N が 1.0 にリセットされ、スケールが Major に戻ります。</p>
+
+<h3>ベースノート（Base）</h3>
+<p>生成されるスケールの最低音。音列はこの音から上方向に、指定したオクターブ数だけ広がります。</p>
+
+<h3>オクターブ数（Octaves）</h3>
+<p>音列がカバーするオクターブ数。広いほど音域が広がり、旋律の多様性が増します。</p>
+
+<hr class="divider">
+
+<h2 id="synth">5. シンセサイザー</h2>
+
+<h3>波形（Wave）</h3>
+<p><strong>Sine（サイン波）</strong>は最も純粋な音色。<strong>Triangle（三角波）</strong>はサイン波に近いが少し明るい。<strong>Square（矩形波）</strong>は奇数倍音が強く中空でリード的な音色。<strong>Sawtooth（ノコギリ波）</strong>は全倍音を含む最もリッチな音色 — TB-303 アシッドベースの基礎。</p>
+
+<h3>カットオフ（Cutoff）</h3>
+<p>ローパスフィルターのカットオフ周波数。低くすると音が暗く丸くなり、高くすると明るくオープンな音色になります。</p>
+
+<h3>レゾナンス（Reso）</h3>
+<p>カットオフ周波数付近の強調。高い値にすると特徴的な「ワウ」ピーク — アシッドベースのキャラクターが生まれます。</p>
+
+<h3>グライド（Glide）</h3>
+<p>音符間のピッチ遷移をなめらかにするポルタメント。0 では即座に音程が変わります。増やすと前の音から新しい音へスライドします。</p>
+
+<h3>オクターブ（Octave）</h3>
+<p>音列全体をオクターブ単位でシフト。−1 や −2 にするとベース音域になります。</p>
+
+<h3>音量（Volume）</h3>
+<p>シンセサイザー声部の出力レベル。</p>
+
+<hr class="divider">
+
+<h2 id="drums">6. ドラム</h2>
+
+<p>ドラムエンジンは Web Audio API を使って3つの声部をゼロから合成します。サンプルは一切使用していません。</p>
+
+<table>
+  <tr><th>声部</th><th>合成方式</th></tr>
+  <tr><td><strong>K — キック</strong></td><td>ピッチスウィープ付きサイン波（160Hz → 45Hz）＋クリックトランジェント。0.4秒ディケイ。</td></tr>
+  <tr><td><strong>S — スネア</strong></td><td>サイン波ボディ＋ノイズ＋スナップオシレーター＋アタックトランジェント。0.35秒ディケイ。</td></tr>
+  <tr><td><strong>H — ハイハット</strong></td><td>フィルターされたホワイトノイズ、高速指数減衰。0.08秒。</td></tr>
+</table>
+
+<p>ドラムステップはノートトリガーと同期して進みます。キネティックエンジンが音を鳴らすたびに、ドラムシーケンサーが1ステップ進みます。</p>
+
+<h3>音量（Volume）</h3>
+<p>全ドラム声部のマスターレベル。</p>
+
+<h3>フィルター（Filter）</h3>
+<p>ドラムバス専用のローパスフィルター。シンセサイザーの音色とは独立して調整できます。</p>
+
+<hr class="divider">
+
+<h2 id="direction">7. 方向（Direction）</h2>
+
+<table>
+  <tr><th>モード</th><th>動作</th></tr>
+  <tr><td><strong>UP（上昇）</strong></td><td>昇順に順番に進む。最高音から最低音に折り返す。</td></tr>
+  <tr><td><strong>DOWN（下降）</strong></td><td>降順に順番に進む。最低音から最高音に折り返す。</td></tr>
+  <tr><td><strong>BOUNCE（反転）</strong></td><td>最高音まで上がったら降り始め、最低音まで下がったら昇り始める。</td></tr>
+  <tr><td><strong>RANDOM（ランダム）</strong></td><td>各トリガーで音列からランダムに選ぶ。T(D,N) LEAP と組み合わせると音程比例タイミングが働く。</td></tr>
+</table>
+
+<hr class="divider">
+
+<h2 id="kinetic">8. キネティック・パラメータ</h2>
+
+<h3>ステップ（Step）</h3>
+<p>次の音をトリガーするために必要な基本距離（キャンバスの幅を1とした単位）。小さい値にすると同じ速度でもより速く音が鳴ります。この値は T(D,N) によって非ダイアトニック音に対して修正されます。</p>
+
+<h3>スピード（Speed）</h3>
+<p>Auto Play 中のみ有効。カーソルが幾何学パターン上を移動する速度を制御します。上げると密なリズムに、下げるとゆったりとした間の多い演奏になります。</p>
+
+<hr class="divider">
+
+<h2 id="drum-pattern">9. ドラムパターングリッド</h2>
+
+<p>画面下部のドラムパターンエディタには、<strong>K</strong>（キック）、<strong>S</strong>（スネア）、<strong>H</strong>（ハイハット）の3行が表示されます。</p>
+
+<h3>編集方法</h3>
+<p>任意のセルをクリックするとオン／オフが切り替わります。アクティブなセルは色で強調表示され、現在再生中のステップは緑の枠で示されます。</p>
+
+<h3>操作ボタン</h3>
+<ul>
+  <li><strong>パターンドロップダウン</strong> — 内蔵パターンを読み込む。</li>
+  <li><span class="label label-dim">RANDOM</span> — ランダムにパターンを生成。キック 30%、スネア 20%、ハイハット 40% の確率でオンになります。</li>
+  <li><span class="label label-dim">CLEAR</span> — 全ステップを消去。</li>
+</ul>
+
+<h3>パターン長</h3>
+<p>パターンの長さはプリセットによって異なります（12ステップまたは16ステップ）。ドラムシーケンサーは音列の長さとは独立してループするため、長さが異なるとポリリズム的な関係が生まれます。</p>
+
+<hr class="divider">
+
+<div class="box chord">
+  <strong>タイミングについての注記：</strong>ドラムステップとノートトリガーは連動しています。音がトリガーされるたびにドラムシーケンサーが1ステップ進みます。ドラムパターンのテンポはクロックではなく、カーソルの移動速度とキネティックステップサイズによって完全に決まります。これは T(D,N) の根幹です：時間は空間であり、メトロノームではありません。
+</div>
+
+<p style="margin-top:32px;font-size:12px;color:var(--text-dim);font-style:italic">
+  IcefaceTDN Beat Machine &nbsp;—&nbsp; Iceface Toy &nbsp;·&nbsp; 2025
+</p>
+
+</div></div>
+</body>
+</html>
