@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drum Pattern Guide — IcefaceTDN</title>
+<style>
+:root {
+  --bg: #0D0D0F;
+  --surface: #16161A;
+  --surface-alt: #1E1E24;
+  --border: #2A2A32;
+  --text: #E8E6E3;
+  --text-dim: #8A8890;
+  --accent: #E8A0BE;
+  --chord: #6B9FC7;
+  --iceface: #B359E6;
+  --active: #A0D4E8;
+  --warning: #C7A06B;
+  --green: #7BC76B;
+  --kick: #E8A0BE;
+  --snare: #6B9FC7;
+  --hihat: #C7A06B;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 14px;
+}
+.page { max-width: 800px; margin: 0 auto; padding: 0 32px; }
+
+.slide {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 0;
+  border-bottom: 1px solid var(--border);
+}
+.slide:last-child { border-bottom: none; }
+.slide-num {
+  font-size: 9px; font-weight: 700; letter-spacing: 3px;
+  color: var(--text-dim); text-transform: uppercase; margin-bottom: 24px;
+}
+
+h1 { font-size: 36px; font-weight: 900; letter-spacing: 2px; line-height: 1.2; margin-bottom: 8px; }
+h1 .k { color: var(--kick); }
+h1 .s { color: var(--snare); }
+h1 .h { color: var(--hihat); }
+.tagline { font-size: 13px; color: var(--text-dim); margin-bottom: 8px; }
+.credit { font-size: 10px; color: var(--text-dim); margin-top: 24px; }
+
+h2 { font-size: 11px; font-weight: 900; letter-spacing: 4px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 24px; }
+h3 { font-size: 16px; font-weight: 900; letter-spacing: 1px; margin-bottom: 16px; }
+h4 { font-size: 13px; font-weight: 900; margin-bottom: 8px; }
+p { margin-bottom: 14px; }
+
+.box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 16px 18px; margin: 12px 0;
+}
+.box.kick { border-top: 3px solid var(--kick); }
+.box.snare { border-top: 3px solid var(--snare); }
+.box.hihat { border-top: 3px solid var(--hihat); }
+.box.ice { border-top: 3px solid var(--iceface); }
+.box h4 { margin-bottom: 10px; }
+.box p { font-size: 13px; margin-bottom: 6px; }
+.box .dim { color: var(--text-dim); }
+
+.core {
+  background: var(--surface); border: 1px solid var(--iceface);
+  border-radius: 6px; padding: 18px 22px; margin: 20px 0; font-size: 13px; line-height: 1.8;
+}
+.core strong { color: var(--iceface); }
+
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 20px 0; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+.four-col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin: 20px 0; }
+
+.col-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 14px 16px;
+}
+.col-box h4 { font-size: 12px; font-weight: 900; margin-bottom: 8px; }
+.col-box p { font-size: 12px; margin-bottom: 6px; }
+.col-box .value { color: var(--accent); font-weight: 700; }
+.col-box.highlight { border-color: var(--iceface); }
+.col-box.highlight h4 { color: var(--iceface); }
+
+table {
+  width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 12px;
+}
+th {
+  font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text-dim); padding: 8px 12px; background: var(--surface);
+  border: 1px solid var(--border); text-align: left;
+}
+td { padding: 8px 12px; border: 1px solid var(--border); vertical-align: top; }
+
+/* ── Grid visualization ── */
+.grid-demo {
+  display: flex; gap: 2px; margin: 16px 0; align-items: center;
+}
+.grid-label {
+  width: 24px; font-size: 11px; font-weight: 900; text-align: right; padding-right: 6px; flex-shrink: 0;
+}
+.grid-label.k { color: var(--kick); }
+.grid-label.s { color: var(--snare); }
+.grid-label.h { color: var(--hihat); }
+.grid-cell {
+  width: 32px; height: 24px; border: 1px solid var(--border); border-radius: 3px;
+  display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700;
+}
+.grid-cell.on-k { background: var(--kick); color: #3A2030; border-color: var(--kick); }
+.grid-cell.on-s { background: var(--snare); color: white; border-color: var(--snare); }
+.grid-cell.on-h { background: var(--hihat); color: white; border-color: var(--hihat); }
+.grid-beat-marker {
+  display: flex; gap: 2px; margin-bottom: 4px; padding-left: 30px;
+}
+.grid-beat-marker span {
+  width: 32px; text-align: center; font-size: 8px; color: var(--text-dim); font-weight: 700;
+}
+
+/* ── Flow steps ── */
+.flow { display: flex; align-items: center; gap: 12px; margin: 24px 0; flex-wrap: wrap; }
+.flow-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 14px 16px; text-align: center; flex: 1; min-width: 140px;
+}
+.flow-box .num { font-size: 20px; font-weight: 900; color: var(--accent); margin-bottom: 4px; }
+.flow-box h4 { font-size: 13px; font-weight: 900; margin-bottom: 6px; }
+.flow-box p { font-size: 11px; margin-bottom: 0; }
+.flow-arrow { font-size: 20px; color: var(--text-dim); flex-shrink: 0; }
+
+/* ── Quick ref ── */
+.qr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+.qr-item {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px;
+}
+.qr-item .label { font-size: 10px; font-weight: 700; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 6px; }
+.qr-item p { font-size: 12px; margin-bottom: 0; }
+
+@media (max-width: 700px) {
+  .three-col, .two-col, .four-col { grid-template-columns: 1fr; }
+  .flow { flex-direction: column; }
+  .flow-arrow { transform: rotate(90deg); }
+  .qr-grid { grid-template-columns: 1fr; }
+  h1 { font-size: 26px; }
+  .grid-cell { width: 24px; height: 20px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TITLE -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <h1>DRUM PATTERN<br>GUIDE</h1>
+  <p style="font-size:28px;font-weight:900;margin-bottom:16px">
+    <span class="k">K</span> &nbsp;
+    <span class="s">S</span> &nbsp;
+    <span class="h">H</span>
+  </p>
+  <p class="tagline">IcefaceTDN Beat Machine — Complete guide to building and using drum patterns.</p>
+  <p class="credit">Iceface | 2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 01: DRUM PANEL OVERVIEW -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <p class="slide-num">01</p>
+  <h2>D R U M &nbsp; P A N E L</h2>
+  <h3>Opening the Drum Panel</h3>
+  <p>Access from the DRUM button at the bottom of the screen.</p>
+
+  <h3>Panel Structure</h3>
+  <div class="two-col">
+    <div class="col-box">
+      <h4>MODE</h4>
+      <p>3 modes: AUTO / SOURCE STEPS / 12-TONE</p>
+    </div>
+    <div class="col-box">
+      <h4>PRESET</h4>
+      <p>Load built-in patterns</p>
+    </div>
+    <div class="col-box">
+      <h4>STEP LENGTH</h4>
+      <p>Steps per lane (4 to 16)</p>
+    </div>
+    <div class="col-box">
+      <h4>RAND</h4>
+      <p>Generate random patterns</p>
+    </div>
+    <div class="col-box">
+      <h4>K / S / H Buttons</h4>
+      <p>Toggle Kick / Snare / HiHat ON/OFF per step</p>
+    </div>
+    <div class="col-box">
+      <h4>SAVE / LOAD</h4>
+      <p>Save and recall your patterns</p>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:12px"><strong>CLEAR / RESET</strong> — Initialize the pattern</p>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 02: THREE MODES -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <p class="slide-num">02</p>
+  <h2>T H R E E &nbsp; M O D E S</h2>
+  <h3>AUTO / SOURCE STEPS / 12-TONE</h3>
+
+  <div class="three-col">
+    <div class="col-box">
+      <h4>AUTO</h4>
+      <p>Automatically assigns Kick/Snare/HiHat. Drums change according to pitch range.</p>
+      <p class="dim">&rarr; When you just want to hear it immediately.</p>
+      <p style="color:var(--warning);font-size:11px;margin-top:8px">Pattern editing disabled</p>
+    </div>
+    <div class="col-box highlight">
+      <h4>SOURCE STEPS</h4>
+      <p>Uses the current scale/MIDI notes as rows (lanes). Creates patterns that follow the melody.</p>
+      <p class="dim">&rarr; The most flexible mode.</p>
+      <p style="color:var(--green);font-size:11px;margin-top:8px">Most flexible mode</p>
+    </div>
+    <div class="col-box">
+      <h4>12-TONE</h4>
+      <p>Uses all 12 chromatic notes as rows. For microtonal pattern creation.</p>
+      <p class="dim">&rarr; Best with Iceface tunings.</p>
+      <p style="color:var(--iceface);font-size:11px;margin-top:8px">Ideal for Iceface tunings</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 03: BASIC PATTERN BUILDING -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <p class="slide-num">03</p>
+  <h2>P A T T E R N &nbsp; B A S I C S</h2>
+  <h3>Understanding K / S / H Placement</h3>
+
+  <div class="three-col">
+    <div class="box kick">
+      <h4 style="color:var(--kick)">K — KICK</h4>
+      <p><strong>The low-end pillar</strong></p>
+      <p>Place on beats 1 and 3 (four-on-the-floor)</p>
+      <p>Add on beats 2 and 4 for more drive</p>
+      <p>Dense kicks create a house feel</p>
+    </div>
+    <div class="box snare">
+      <h4 style="color:var(--snare)">S — SNARE</h4>
+      <p><strong>The backbeat anchor</strong></p>
+      <p>Beats 2 and 4 is the standard (backbeat)</p>
+      <p>Beat 1 snare adds variation</p>
+      <p>Rolls create fills</p>
+    </div>
+    <div class="box hihat">
+      <h4 style="color:var(--hihat)">H — HIHAT</h4>
+      <p><strong>The rhythmic subdivision</strong></p>
+      <p>Even 8th or 16th-note patterns</p>
+      <p>Offbeat placement adds shuffle</p>
+      <p>Density controls the sense of speed</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:32px">Reading the 16-Step Grid</h3>
+  <p style="font-size:12px;color:var(--text-dim);margin-bottom:8px">1 bar = 16 steps (4 beats &times; 4 subdivisions)</p>
+
+  <div class="grid-beat-marker">
+    <span>1</span><span></span><span></span><span></span>
+    <span>2</span><span></span><span></span><span></span>
+    <span>3</span><span></span><span></span><span></span>
+    <span>4</span><span></span><span></span><span></span>
+  </div>
+  <div class="grid-demo">
+    <span class="grid-label k">K</span>
+    <div class="grid-cell on-k"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+    <div class="grid-cell on-k"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+    <div class="grid-cell on-k"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+    <div class="grid-cell on-k"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+  </div>
+  <div class="grid-demo">
+    <span class="grid-label s">S</span>
+    <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+    <div class="grid-cell on-s"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+    <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+    <div class="grid-cell on-s"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+  </div>
+  <div class="grid-demo">
+    <span class="grid-label h">H</span>
+    <div class="grid-cell on-h"></div><div class="grid-cell"></div><div class="grid-cell on-h"></div><div class="grid-cell"></div>
+    <div class="grid-cell on-h"></div><div class="grid-cell"></div><div class="grid-cell on-h"></div><div class="grid-cell"></div>
+    <div class="grid-cell on-h"></div><div class="grid-cell"></div><div class="grid-cell on-h"></div><div class="grid-cell"></div>
+    <div class="grid-cell on-h"></div><div class="grid-cell"></div><div class="grid-cell on-h"></div><div class="grid-cell"></div>
+  </div>
+  <p style="font-size:11px;color:var(--text-dim);margin-top:8px">This example: four-on-the-floor (K) + backbeat (S) + 8th-note (H) &larr; start here</p>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 04: PRESET PATTERNS -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <p class="slide-num">04</p>
+  <h2>P R E S E T &nbsp; P A T T E R N S</h2>
+  <h3>Built-in Patterns</h3>
+
+  <div class="two-col">
+    <div class="col-box">
+      <h4>Default <span style="color:var(--text-dim);font-weight:400">(12 steps)</span></h4>
+      <p>Balanced, all-round pattern. The starting point for first-time exploration.</p>
+    </div>
+    <div class="col-box">
+      <h4>Four on Ice <span style="color:var(--text-dim);font-weight:400">(16 steps)</span></h4>
+      <p>Basic four-on-the-floor. A "ruler" pattern for observing T(D,N) time transformations.</p>
+    </div>
+    <div class="col-box">
+      <h4>Ghost Drift <span style="color:var(--text-dim);font-weight:400">(16 steps)</span></h4>
+      <p>Syncopated breakbeat. Spatial movement with velocity ripples.</p>
+    </div>
+    <div class="col-box">
+      <h4>Rose's Waltz <span style="color:var(--text-dim);font-weight:400">(12 steps)</span></h4>
+      <p>Polyrhythmic approach with 12 steps. Triple-meter groove.</p>
+    </div>
+    <div class="col-box">
+      <h4>Asymmetry <span style="color:var(--text-dim);font-weight:400">(16 steps)</span></h4>
+      <p>Irregular accents across kick and snare. Off-kilter groove.</p>
+    </div>
+    <div class="col-box">
+      <h4>Deep Glitch <span style="color:var(--text-dim);font-weight:400">(16 steps)</span></h4>
+      <p>Dense, overlapping hits. Chaotic, glitchy texture.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 05: RAND WORKFLOW -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <p class="slide-num">05</p>
+  <h2>R A N D &nbsp; W O R K F L O W</h2>
+  <h3>RAND &rarr; Edit &rarr; SAVE Workflow</h3>
+
+  <div class="flow">
+    <div class="flow-box">
+      <div class="num">01</div>
+      <h4>RAND</h4>
+      <p>Press RAND.<br>Generates sparse pattern:<br>Kick 25% / Snare 20% / HiHat 35%</p>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box">
+      <div class="num">02</div>
+      <h4>LISTEN</h4>
+      <p>Play and listen.<br>Note the elements you like.</p>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box">
+      <div class="num">03</div>
+      <h4>EDIT</h4>
+      <p>Turn OFF unwanted steps,<br>turn ON missing ones.<br>Repeat RAND 1-2x if needed.</p>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box">
+      <div class="num">04</div>
+      <h4>SAVE</h4>
+      <p>Save your pattern with a name.<br>Recall it anytime.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 06: T(D,N) AND DRUMS -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <p class="slide-num">06</p>
+  <h2>T ( D , N ) &nbsp; & &nbsp; D R U M S</h2>
+  <h3>How N Affects Drum Timing</h3>
+
+  <p>The T(D,N) N parameter changes the step interval of non-diatonic notes. This causes drum and note timing to shift relative to each other, producing a unique groove feel.</p>
+
+  <div class="four-col">
+    <div class="col-box">
+      <h4>N = 1.00</h4>
+      <p><strong>Equal / Straight</strong></p>
+      <p>All steps even. Drums and notes perfectly synced.</p>
+    </div>
+    <div class="col-box">
+      <h4>N = 0.75</h4>
+      <p><strong>Light Shuffle</strong></p>
+      <p>Non-diatonic notes lag slightly behind.</p>
+    </div>
+    <div class="col-box highlight">
+      <h4>N = 0.50</h4>
+      <p><strong>Iceface / Half Shuffle</strong></p>
+      <p>50&cent; pitch shift and timing change happen together. Linked with Iceface tunings.</p>
+    </div>
+    <div class="col-box">
+      <h4>N = 0.25</h4>
+      <p><strong>Heavy Shuffle</strong></p>
+      <p>Large timing displacement. Experimental groove.</p>
+    </div>
+  </div>
+
+  <div class="core">
+    <strong>Tip:</strong> Selecting an Iceface tuning automatically sets N = 0.5. Try combining it with different drum patterns to explore the relationship between pitch transformation and rhythmic feel.
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 07: COMPRESSOR & FILTER -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <p class="slide-num">07</p>
+  <h2>S O U N D &nbsp; S H A P I N G</h2>
+  <h3>Compressor & Drum Filter</h3>
+
+  <div class="two-col">
+    <div class="box">
+      <h4>COMPRESSOR</h4>
+      <table>
+        <tr><td><strong>COMP ON/OFF</strong></td><td>Enable/disable compressor</td></tr>
+        <tr><td><strong>AMOUNT</strong></td><td>Compression ratio. Higher = more even levels</td></tr>
+        <tr><td><strong>MAKEUP</strong></td><td>Post-compression volume compensation</td></tr>
+      </table>
+      <p style="color:var(--active);font-size:11px;margin-top:10px">TIPS</p>
+      <p style="font-size:11px">Amount 0.3&ndash;0.5: natural punch<br>
+      Amount 0.8+: electronic clamp feel<br>
+      MAKEUP 0.1&ndash;0.2 is natural</p>
+    </div>
+    <div class="box">
+      <h4>DRUM FILTER</h4>
+      <table>
+        <tr><td><strong>CUTOFF</strong></td><td>Cutoff frequency (rolls off high end)</td></tr>
+        <tr><td><strong>RESONANCE</strong></td><td>Emphasis at cutoff point</td></tr>
+      </table>
+      <p style="color:var(--active);font-size:11px;margin-top:10px">TIPS</p>
+      <p style="font-size:11px">Low cutoff: muffled lo-fi feel<br>
+      Cutoff + high resonance: acid character<br>
+      Drum-only filter (does not affect synth)</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- QUICK REFERENCE -->
+<!-- ════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Q U I C K &nbsp; R E F E R E N C E</h2>
+  <h3>Common Tasks at a Glance</h3>
+
+  <div class="qr-grid">
+    <div class="qr-item">
+      <div class="label">FIRST TIME</div>
+      <p>SOURCE STEPS &rarr; Preset "Four on Ice" &rarr; Play</p>
+    </div>
+    <div class="qr-item">
+      <div class="label">INSTANT SOUND</div>
+      <p>Switch to AUTO mode &mdash; that's it</p>
+    </div>
+    <div class="qr-item">
+      <div class="label">FINDING PATTERNS</div>
+      <p>Press RAND several times &rarr; SAVE when you like one</p>
+    </div>
+    <div class="qr-item">
+      <div class="label">SOUND SHAPING</div>
+      <p>COMP ON &rarr; Amount 0.4 / FILTER Cutoff 0.7&ndash;1.0</p>
+    </div>
+    <div class="qr-item">
+      <div class="label">WITH ICEFACE TUNING</div>
+      <p>Select Iceface Tuning &rarr; N auto-sets to 0.5 &rarr; 12-TONE mode</p>
+    </div>
+    <div class="qr-item">
+      <div class="label">RHYTHM VARIATION</div>
+      <p>Move the TDN N slider &rarr; timing shifts in real time</p>
+    </div>
+  </div>
+
+  <p class="credit" style="margin-top:40px;text-align:center">Drum Pattern Guide &nbsp;&mdash;&nbsp; IcefaceTDN &nbsp;&middot;&nbsp; Iceface Toys &nbsp;&middot;&nbsp; 2026</p>
+</div>
+
+</div>
+</body>
+</html>
