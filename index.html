@@ -1,0 +1,2432 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>IcefaceTDN Beat Machine</title>
+<style>
+:root {
+  --bg: #FAF7F5;
+  --surface: #FFFFFF;
+  --surface-alt: #F0ECEB;
+  --border: #D5CFCC;
+  --text: #2A2523;
+  --text-dim: #8A8280;
+  --text-second: #6A6563;
+  --accent: #C76B6B;
+  --chord: #6B9FC7;
+  --warning: #C7A06B;
+  --active: #7BC76B;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  user-select: none;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.header h1 { font-size: 13px; font-weight: 900; letter-spacing: 1px; }
+.header .info { font-size: 9px; color: var(--text-dim); display: flex; gap: 8px; align-items: center; }
+
+.main { display: flex; flex: 1; overflow: hidden; }
+
+.canvas-wrap {
+  position: relative;
+  border-right: 1px solid var(--border);
+  background: var(--bg);
+  aspect-ratio: 1 / 1;
+  max-height: 100%;
+  flex-shrink: 0;
+}
+#canvas { width: 100%; height: 100%; cursor: crosshair; display: block; }
+.note-display {
+  position: absolute; top: 12px; left: 14px;
+  font-size: 22px; font-weight: 900; color: var(--accent);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  pointer-events: none;
+}
+.start-hint {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  font-size: 12px; color: var(--text-dim); text-align: center;
+  pointer-events: none; transition: opacity 0.5s;
+}
+
+.sidebar {
+  width: 260px;
+  background: var(--surface);
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.section { padding: 8px; background: var(--surface-alt); border-radius: 4px; border: 1px solid var(--border); }
+.section-label { font-size: 8px; font-weight: 700; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 6px; }
+.row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.row label { font-size: 9px; font-weight: 600; width: 55px; flex-shrink: 0; }
+.row input[type="range"] { flex: 1; height: 4px; accent-color: var(--accent); }
+.row .val { font-size: 8px; color: var(--text-second); width: 40px; text-align: right; font-weight: 600; }
+select {
+  font-family: inherit; font-size: 9px; padding: 3px 6px;
+  border: 1px solid var(--border); border-radius: 3px; background: var(--surface); flex: 1;
+}
+
+.mode-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+.mode-btn {
+  font-family: inherit; font-size: 8px; font-weight: 700;
+  padding: 4px 8px; border: 1px solid var(--border); border-radius: 3px;
+  background: var(--surface); color: var(--text-second); cursor: pointer;
+  transition: all 0.15s;
+}
+.mode-btn:hover { background: var(--surface-alt); }
+.mode-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+.controls {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding: 8px 12px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+.drum-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.drum-grid { display: flex; flex-direction: column; gap: 2px; }
+.drum-row { display: flex; align-items: center; gap: 2px; }
+.drum-label { font-size: 8px; font-weight: 700; width: 30px; text-align: right; padding-right: 4px; }
+.drum-cell {
+  width: 28px; height: 20px;
+  border: 1px solid var(--border); border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 7px; font-weight: 700; cursor: pointer; transition: background 0.1s;
+}
+.drum-cell.active-k { background: var(--accent); color: white; border-color: var(--accent); }
+.drum-cell.active-s { background: var(--chord); color: white; border-color: var(--chord); }
+.drum-cell.active-h { background: var(--warning); color: white; border-color: var(--warning); }
+.drum-cell.current { box-shadow: inset 0 0 0 2px var(--active); }
+.drum-cell:hover { opacity: 0.8; }
+.small-btn {
+  font-family: inherit; font-size: 8px; font-weight: 700;
+  padding: 3px 7px; border: 1px solid var(--border); border-radius: 3px;
+  background: var(--surface); color: var(--text-second); cursor: pointer;
+}
+.small-btn:hover { background: var(--surface-alt); }
+
+/* Mobile / iPhone optimization */
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  height: auto;
+  overflow: auto;
+  overscroll-behavior: none;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.main {
+  min-height: 0;
+}
+
+.canvas-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#canvas {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+button,
+select,
+input[type="range"],
+a {
+  touch-action: manipulation;
+}
+
+button,
+select,
+input[type="range"] {
+  min-height: 32px;
+}
+
+@supports (height: 100dvh) {
+  body { min-height: 100dvh; }
+}
+
+@media (max-width: 900px) {
+  body {
+    overflow: auto;
+  }
+
+  .header {
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .header h1 {
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .header .info {
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+    font-size: 10px;
+  }
+
+  .main {
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .canvas-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-height: min(54dvh, 62svh);
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .note-display {
+    top: 10px;
+    left: 12px;
+    font-size: 18px;
+  }
+
+  .start-hint {
+    font-size: 13px;
+    width: min(90%, 320px);
+    line-height: 1.35;
+  }
+
+  .sidebar {
+    width: 100%;
+    overflow: visible;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .section {
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    margin-bottom: 8px;
+  }
+
+  .row {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .row label {
+    width: 62px;
+    font-size: 11px;
+  }
+
+  .row .val {
+    width: 46px;
+    font-size: 10px;
+  }
+
+  select {
+    font-size: 12px;
+    padding: 6px 8px;
+    min-height: 36px;
+  }
+
+  .mode-btns {
+    gap: 6px;
+  }
+
+  .mode-btn,
+  .small-btn {
+    font-size: 11px;
+    padding: 7px 10px;
+    min-height: 36px;
+  }
+
+  .controls {
+    max-height: none;
+    overflow: visible;
+    padding: 10px 12px calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .drum-header {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .drum-header > span:first-child {
+    font-size: 11px !important;
+  }
+
+  .drum-header > span:last-child {
+    width: 100%;
+    margin-left: 0 !important;
+    font-size: 10px !important;
+  }
+
+  .drum-label {
+    width: 36px;
+    font-size: 10px;
+  }
+
+  .drum-cell {
+    width: min(8vw, 34px);
+    min-width: 24px;
+    height: 28px;
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 560px) {
+  .header {
+    flex-direction: column;
+  }
+
+  .header .info {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .canvas-wrap {
+    max-height: min(50dvh, 54svh);
+  }
+
+  .row {
+    align-items: center;
+  }
+
+  .row label {
+    width: 58px;
+  }
+
+  .drum-cell {
+    width: min(9vw, 30px);
+    min-width: 22px;
+    height: 26px;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>ICEFACETDN BEAT MACHINE</h1>
+  <div class="info">
+    <a href="index_walk.html" style="font-family:inherit;font-size:8px;font-weight:700;color:var(--warning);text-decoration:none;padding:3px 7px;border:1px solid var(--warning);border-radius:3px;">WALK MODE</a>
+    <a href="manual_ja.html" target="_blank" style="font-family:inherit;font-size:8px;font-weight:700;color:var(--text-dim);text-decoration:none;padding:3px 7px;border:1px solid var(--border);border-radius:3px;">MANUAL</a>
+    <span id="noteInfo">--</span>
+    <span id="bpmInfo" style="font-family:inherit;font-size:9px;font-weight:700;color:var(--warning);padding:2px 6px;background:var(--surface-alt);border:1px solid var(--border);border-radius:3px;">-- TEMPO</span>
+    <span id="modeInfo">T(D,N)</span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="canvas-wrap">
+    <canvas id="canvas"></canvas>
+    <div class="note-display" id="noteDisplay">--</div>
+    <div class="start-hint" id="startHint">Drag on canvas to play</div>
+  </div>
+
+  <div class="sidebar">
+    <div class="section" style="background:var(--accent); border-color:var(--accent); margin-bottom:6px;">
+      <div class="section-label" style="color:white; opacity:0.8; margin-bottom:4px;">GLOBAL PRESET</div>
+      <select id="globalPreset" style="width:100%; border:none; background:rgba(255,255,255,0.2); color:white; font-weight:bold; cursor:pointer; height:24px; outline:none;">
+        <option value="" style="color:var(--text)">-- CUSTOM / MANUAL --</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <div class="section-label">TRANSPORT</div>
+      <div class="row" style="gap:4px">
+        <button class="mode-btn" id="btnPlay" style="background:var(--active);color:white;border-color:var(--active);flex:1">&#9654; PLAY</button>
+        <button class="mode-btn" id="btnStop" style="flex:1;display:none">&#9632; STOP</button>
+        <select id="patternSelect" style="flex:2"></select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">SCALE & TUNING</div>
+      <div class="row">
+        <label>Scale</label>
+        <select id="scaleSelect"></select>
+      </div>
+      <div class="row">
+        <label>Tuning</label>
+        <select id="tuningSelect"></select>
+      </div>
+      <div class="row">
+        <label>Base</label>
+        <select id="baseNote"></select>
+      </div>
+      <div class="row">
+        <label>Octaves</label>
+        <select id="octaveSpread"></select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">T(D,N) RELATIONAL-TEMPORAL</div>
+      <div class="mode-btns" style="margin-bottom:6px">
+        <button class="mode-btn active" id="btnTDN">T(D,N)</button>
+        <button class="mode-btn" id="btnLeap">T(D,N) LEAP</button>
+      </div>
+      <div class="row">
+        <label>N</label>
+        <input type="range" id="tdnN" min="0" max="100" value="50">
+        <span class="val" id="tdnNVal">0.50</span>
+      </div>
+      <div class="row">
+        <label>Z-Depth</label>
+        <input type="range" id="zDepth" min="0" max="100" value="25">
+        <span class="val" id="zDepthVal">25%</span>
+      </div>
+      <div class="row">
+        <label>Swing</label>
+        <input type="range" id="swing" min="50" max="75" value="50">
+        <span class="val" id="swingVal">50%</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">SYNTH</div>
+      <div class="row">
+        <label>Wave</label>
+        <select id="waveform"></select>
+      </div>
+      <div class="row">
+        <label>Cutoff</label>
+        <input type="range" id="cutoff" min="0" max="100" value="80">
+        <span class="val" id="cutoffVal">80%</span>
+      </div>
+      <div class="row">
+        <label>Reso</label>
+        <input type="range" id="resonance" min="0" max="95" value="20">
+        <span class="val" id="resoVal">20%</span>
+      </div>
+      <div class="row">
+        <label>Reverb</label>
+        <input type="range" id="synthReverb" min="0" max="100" value="35">
+        <span class="val" id="synthReverbVal">35%</span>
+      </div>
+      <div class="row">
+        <label>Glide</label>
+        <input type="range" id="glide" min="0" max="100" value="0">
+        <span class="val" id="glideVal">0%</span>
+      </div>
+      <div class="row">
+        <label>Octave</label>
+        <select id="octaveShift"></select>
+      </div>
+      <div class="row">
+        <label>Volume</label>
+        <input type="range" id="synthVol" min="0" max="100" value="60">
+        <span class="val" id="synthVolVal">60%</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">DRUMS</div>
+      <div class="row">
+        <label>Volume</label>
+        <input type="range" id="drumVol" min="0" max="100" value="73">
+        <span class="val" id="drumVolVal">73%</span>
+      </div>
+      <div class="row">
+        <label>Filter</label>
+        <input type="range" id="drumFilter" min="0" max="100" value="100">
+        <span class="val" id="drumFilterVal">100%</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">DIRECTION</div>
+      <div class="mode-btns">
+        <button class="mode-btn" id="dirUp">UP</button>
+        <button class="mode-btn" id="dirDown">DOWN</button>
+        <button class="mode-btn" id="dirBounce">BOUNCE</button>
+        <button class="mode-btn active" id="dirRandom">RANDOM</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">KINETIC</div>
+      <div class="row">
+        <label>Step</label>
+        <input type="range" id="stepSize" min="5" max="500" value="172">
+        <span class="val" id="stepVal">0.172</span>
+      </div>
+      <div class="row">
+        <label>Speed</label>
+        <input type="range" id="autoSpeed" min="5" max="200" value="44">
+        <span class="val" id="autoSpeedVal">44</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">FIELD DRAG</div>
+      <div class="row">
+        <label>X Warp</label>
+        <span class="val" id="fieldXVal">0.00</span>
+      </div>
+      <div class="row">
+        <label>Tone</label>
+        <span class="val" id="fieldToneVal">0.00</span>
+      </div>
+      <div class="row">
+        <label>Depth</label>
+        <span class="val" id="fieldDepthVal">0.00</span>
+      </div>
+      <div class="row">
+        <label>Energy</label>
+        <span class="val" id="fieldEnergyVal">0.00</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="drum-header">
+    <span style="font-size:10px;font-weight:900">DRUM PATTERN</span>
+    <select id="drumPreset"></select>
+    <button class="small-btn" id="btnRandom">RANDOM</button>
+    <button class="small-btn" id="btnClear">CLEAR</button>
+    <span style="font-size:8px;color:var(--text-dim);margin-left:auto" id="drumStepInfo">STEP: --</span>
+  </div>
+  <div class="drum-grid" id="drumGrid"></div>
+</div>
+
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// IcefaceTDN Beat Machine — Web Edition
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const DIATONIC = new Set([0, 2, 4, 5, 7, 9, 11]);
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+const GLOBAL_PRESETS = {
+  'ICEFACE PENTAGON': {
+    tuning: 'Iceface', scale: 'Chromatic', pattern: 'Pentagon', timingMode: 'tdn', base: 60, octaves: 2,
+    tdnN: 50, zDepth: 25, swing: 50, wave: 'sine', cutoff: 80, reso: 20, reverb: 35,
+    glide: 0, octave: 0, synthVol: 60, drumVol: 73, drumFilter: 100, drumPre: 'Default',
+    dir: 'random', step: 172, speed: 44
+  },
+  'ACID SAW': {
+    tuning: 'Equal (12-TET)', scale: 'Minor', pattern: 'Lissajous 3:2', timingMode: 'tdn', base: 48, octaves: 3,
+    tdnN: 100, zDepth: 0, swing: 50, wave: 'sawtooth', cutoff: 100, reso: 85, reverb: 20,
+    glide: 15, octave: -1, synthVol: 50, drumVol: 85, drumFilter: 100, drumPre: 'Four on Ice',
+    dir: 'bounce', step: 150, speed: 70
+  },
+  'GHOST AMBIENT': {
+    tuning: 'Just Intonation', scale: 'Major', pattern: 'Spiral', timingMode: 'leap', base: 60, octaves: 4,
+    tdnN: 10, zDepth: 100, swing: 50, wave: 'triangle', cutoff: 95, reso: 0, reverb: 90,
+    glide: 30, octave: 0, synthVol: 80, drumVol: 40, drumFilter: 30, drumPre: 'Ghost Drift',
+    dir: 'up', step: 80, speed: 25
+  },
+  'RAW CHIP': {
+    tuning: 'Equal (12-TET)', scale: 'Chromatic', pattern: 'Square', timingMode: 'tdn', base: 72, octaves: 2,
+    tdnN: 80, zDepth: 10, swing: 50, wave: 'square', cutoff: 100, reso: 0, reverb: 10,
+    glide: 0, octave: 0, synthVol: 45, drumVol: 80, drumFilter: 100, drumPre: 'Default',
+    dir: 'down', step: 200, speed: 110
+  },
+  'DEEP SUB': {
+    tuning: 'Iceface', scale: 'Minor', pattern: 'Breathing', timingMode: 'leap', base: 36, octaves: 2,
+    tdnN: 20, zDepth: 60, swing: 67, wave: 'sine', cutoff: 20, reso: 50, reverb: 50,
+    glide: 80, octave: 0, synthVol: 85, drumVol: 90, drumFilter: 60, drumPre: 'Four on Ice',
+    dir: 'random', step: 100, speed: 40
+  },
+  'COSMIC PULSE': {
+    tuning: 'Pythagorean', scale: 'Whole Tone', pattern: 'Star', timingMode: 'tdn', base: 48, octaves: 2,
+    tdnN: 90, zDepth: 15, swing: 50, wave: 'sawtooth', cutoff: 60, reso: 30, reverb: 40,
+    glide: 5, octave: 1, synthVol: 55, drumVol: 75, drumFilter: 90, drumPre: 'Asymmetry',
+    dir: 'random', step: 80, speed: 120
+  },
+  'NEON TRANCE': {
+    tuning: 'Equal (12-TET)', scale: 'Lydian', pattern: 'Figure 8', timingMode: 'tdn', base: 60, octaves: 2,
+    tdnN: 100, zDepth: 5, swing: 67, wave: 'sawtooth', cutoff: 75, reso: 40, reverb: 60,
+    glide: 20, octave: 0, synthVol: 65, drumVol: 80, drumFilter: 100, drumPre: 'Default',
+    dir: 'up', step: 120, speed: 135
+  },
+  'DARK MATTER': {
+    tuning: 'Iceface', scale: 'Diminished', pattern: 'Hypotrochoid', timingMode: 'tdn', base: 36, octaves: 3,
+    tdnN: 15, zDepth: 90, swing: 75, wave: 'sine', cutoff: 15, reso: 70, reverb: 75,
+    glide: 40, octave: -2, synthVol: 75, drumVol: 60, drumFilter: 40, drumPre: 'Asymmetry',
+    dir: 'random', step: 250, speed: 30
+  },
+  'GLITCH JUNGLE': {
+    tuning: 'Maqam Rast', scale: 'Chromatic', pattern: 'Random Walk', timingMode: 'leap', base: 48, octaves: 4,
+    tdnN: 100, zDepth: 40, swing: 50, wave: 'square', cutoff: 90, reso: 10, reverb: 25,
+    glide: 0, octave: 0, synthVol: 50, drumVol: 95, drumFilter: 100, drumPre: 'Deep Glitch',
+    dir: 'bounce', step: 180, speed: 180
+  },
+  'ZEN GARDEN': {
+    tuning: 'Just Intonation', scale: 'Major', pattern: 'Spiral', timingMode: 'leap', base: 60, octaves: 2,
+    tdnN: 5, zDepth: 100, swing: 50, wave: 'sine', cutoff: 100, reso: 0, reverb: 100,
+    glide: 10, octave: 0, synthVol: 70, drumVol: 20, drumFilter: 20, drumPre: 'Ghost Drift',
+    dir: 'up', step: 50, speed: 15
+  }
+};
+
+function applyGlobalPreset(p) {
+  Array.from($('tuningSelect').options).forEach((opt, i) => { if (opt.textContent === p.tuning) $('tuningSelect').value = i; });
+  Array.from($('scaleSelect').options).forEach((opt, i) => { if (opt.textContent === p.scale) $('scaleSelect').value = i; });
+  $('baseNote').value = p.base;
+  $('octaveSpread').value = p.octaves;
+  
+  $('tdnN').value = p.tdnN; $('tdnN').dispatchEvent(new Event('input'));
+  $('zDepth').value = p.zDepth; $('zDepth').dispatchEvent(new Event('input'));
+  $('swing').value = p.swing; $('swing').dispatchEvent(new Event('input'));
+  
+  $('waveform').value = p.wave;
+  $('cutoff').value = p.cutoff; $('cutoff').dispatchEvent(new Event('input'));
+  $('resonance').value = p.reso; $('resonance').dispatchEvent(new Event('input'));
+  $('synthReverb').value = p.reverb; $('synthReverb').dispatchEvent(new Event('input'));
+  $('glide').value = p.glide; $('glide').dispatchEvent(new Event('input'));
+  $('octaveShift').value = p.octave;
+  $('synthVol').value = p.synthVol; $('synthVol').dispatchEvent(new Event('input'));
+  
+  $('drumVol').value = p.drumVol; $('drumVol').dispatchEvent(new Event('input'));
+  $('drumFilter').value = p.drumFilter; $('drumFilter').dispatchEvent(new Event('input'));
+  
+  Array.from($('drumPreset').options).forEach((opt, i) => { if (opt.textContent === p.drumPre) $('drumPreset').value = p.drumPre; });
+  $('drumPreset').dispatchEvent(new Event('change'));
+  
+  $('stepSize').value = p.step; $('stepSize').dispatchEvent(new Event('input'));
+  $('autoSpeed').value = p.speed; $('autoSpeed').dispatchEvent(new Event('input'));
+  
+  $('patternSelect').value = p.pattern;
+  currentPatternName = p.pattern;
+  if(typeof stopAutoPlay === "function" && autoPlaying) {
+      stopAutoPlay();
+      startAutoPlay();
+  }
+  
+  timingMode = p.timingMode;
+  $('btnTDN').classList.toggle('active', timingMode === 'tdn');
+  $('btnLeap').classList.toggle('active', timingMode === 'leap');
+  $('modeInfo').textContent = timingMode === 'tdn' ? 'T(D,N)' : 'T(D,N) LEAP';
+  
+  direction = p.dir;
+  bounceDir = 1;
+  ['Up','Down','Bounce','Random'].forEach(dd => {
+    const btn = $('dir' + dd);
+    if(btn) btn.classList.toggle('active', dd.toLowerCase() === p.dir);
+  });
+  
+  // Set the select name but don't re-trigger
+  const gpSel = $('globalPreset');
+  for (let i = 0; i < gpSel.options.length; i++) {
+    if (gpSel.options[i].value === Object.keys(GLOBAL_PRESETS).find(key => GLOBAL_PRESETS[key] === p)) {
+      gpSel.selectedIndex = i;
+      break;
+    }
+  }
+  
+  buildNoteArray();
+}
+
+// Track manual changes to reset the selector to "Custom"
+function markCustom() {
+  $('globalPreset').value = "";
+}
+
+const SCALES = [
+  { name: 'Major',       intervals: [0,2,4,5,7,9,11] },
+  { name: 'Minor',       intervals: [0,2,3,5,7,8,10] },
+  { name: 'Chromatic',   intervals: [0,1,2,3,4,5,6,7,8,9,10,11] },
+  { name: 'Pentatonic',  intervals: [0,2,4,7,9] },
+  { name: 'Dorian',      intervals: [0,2,3,5,7,9,10] },
+  { name: 'Phrygian',    intervals: [0,1,3,5,7,8,10] },
+  { name: 'Lydian',      intervals: [0,2,4,6,7,9,11] },
+  { name: 'Whole Tone',  intervals: [0,2,4,6,8,10] },
+  { name: 'Diminished',  intervals: [0,2,3,5,6,8,9,11] },
+];
+
+const TUNINGS = [
+  { name: 'Equal (12-TET)',     cents: [0,0,0,0,0,0,0,0,0,0,0,0], iceface: false },
+  { name: 'Iceface',            cents: [0,50,0,50,0,0,50,0,50,0,50,0], iceface: true },
+  { name: 'Just Intonation',    cents: [0,11.73,3.91,15.64,-13.69,-1.96,-17.49,1.96,13.69,-15.64,-17.6,-11.73], iceface: false },
+  { name: 'Meantone 1/4',       cents: [0,-24.05,-6.84,10.26,-13.69,3.42,-20.53,-3.42,6.84,-10.26,13.69,-17.11], iceface: false },
+  { name: 'Pythagorean',        cents: [0,-9.78,3.91,-5.87,7.82,-1.96,11.73,1.96,-7.82,5.87,-3.91,9.78], iceface: false },
+  { name: 'Maqam Rast',         cents: [0,0,0,-50,0,0,0,0,0,0,-50,0], iceface: false },
+  { name: 'Maqam Rast Iceface', cents: [0,50,0,-50,0,0,50,0,50,0,-50,0], iceface: true },
+  { name: 'Kotori',             cents: [0,0,0,0,0,50,0,0,0,0,0,-50], iceface: false },
+  { name: 'Kotori Iceface',     cents: [0,50,0,50,0,50,50,0,50,0,50,-50], iceface: true },
+  { name: 'Balloon',            cents: [0,0,0,0,50,0,0,0,0,0,0,50], iceface: false },
+  { name: 'Balloon Iceface',    cents: [0,50,0,50,50,0,50,0,50,0,50,50], iceface: true },
+];
+
+const DRUM_PRESETS = {
+  'Default': [
+    {k:1,s:0,h:0},{k:0,s:0,h:1},{k:0,s:1,h:0},{k:0,s:0,h:1},
+    {k:1,s:0,h:1},{k:0,s:0,h:1},{k:0,s:1,h:0},{k:0,s:0,h:1},
+    {k:1,s:0,h:0},{k:0,s:0,h:1},{k:0,s:1,h:0},{k:0,s:0,h:1},
+  ],
+  'Four on Ice': [
+    {k:1,s:0,h:0},{k:0,s:0,h:0},{k:0,s:0,h:1},{k:0,s:0,h:0},
+    {k:1,s:1,h:0},{k:0,s:0,h:0},{k:0,s:0,h:1},{k:0,s:0,h:0},
+    {k:1,s:0,h:0},{k:0,s:0,h:0},{k:0,s:0,h:1},{k:0,s:0,h:0},
+    {k:1,s:1,h:0},{k:0,s:0,h:0},{k:0,s:0,h:1},{k:0,s:0,h:0},
+  ],
+  'Ghost Drift': [
+    {k:1,s:0,h:1},{k:0,s:0,h:0},{k:0,s:0,h:1},{k:0,s:0,h:1},
+    {k:0,s:1,h:0},{k:0,s:0,h:1},{k:0,s:0,h:0},{k:1,s:0,h:0},
+    {k:0,s:0,h:1},{k:0,s:0,h:0},{k:1,s:0,h:1},{k:0,s:0,h:1},
+    {k:0,s:1,h:0},{k:0,s:0,h:1},{k:0,s:0,h:0},{k:0,s:0,h:0},
+  ],
+  "Rose's Waltz": [
+    {k:1,s:0,h:1},{k:0,s:0,h:0},{k:0,s:0,h:1},{k:0,s:1,h:0},
+    {k:0,s:0,h:1},{k:0,s:0,h:0},{k:1,s:0,h:1},{k:0,s:0,h:0},
+    {k:0,s:0,h:1},{k:0,s:1,h:0},{k:0,s:0,h:1},{k:0,s:0,h:0},
+  ],
+  'Asymmetry': [
+    {k:1,s:0,h:1},{k:0,s:0,h:0},{k:0,s:0,h:0},{k:0,s:1,h:1},
+    {k:1,s:0,h:0},{k:0,s:1,h:1},{k:0,s:0,h:0},{k:0,s:0,h:1}, // index 4 (beat 5) has s:0
+    {k:1,s:1,h:0},{k:1,s:0,h:0},{k:0,s:1,h:1},{k:0,s:0,h:0},
+    {k:1,s:0,h:1},{k:1,s:1,h:0},{k:0,s:0,h:1},{k:0,s:0,h:0}, // index 12 (beat 13) has s:0
+  ],
+  'Deep Glitch': [
+    {k:1,s:1,h:0},{k:0,s:0,h:1},{k:0,s:1,h:1},{k:1,s:0,h:0},
+    {k:0,s:0,h:0},{k:1,s:0,h:1},{k:0,s:1,h:0},{k:0,s:0,h:1},
+    {k:1,s:1,h:1},{k:0,s:1,h:0},{k:0,s:0,h:1},{k:1,s:1,h:0},
+    {k:0,s:0,h:0},{k:1,s:0,h:1},{k:0,s:0,h:1},{k:0,s:1,h:1},
+  ],
+};
+
+// ── State ──
+let audioCtx = null;
+let mouseDown = false;
+let mousePos = { x: 0.5, y: 0.5 };
+let pointerPos = { x: 0.5, y: 0.5 };
+let autoPos = { x: 0.5, y: 0.5 };
+let prevMousePos = null;
+let kineticAccum = 0;
+let kineticSeqIndex = 0;
+let kineticStepCount = 0;
+let lastPlayedNote = null;
+let direction = 'random';
+let bounceDir = 1;
+let timingMode = 'tdn';
+let currentNoteArray = [];
+let drumPattern = JSON.parse(JSON.stringify(DRUM_PRESETS['Default']));
+let drumStepIndex = 0;
+let hasStarted = false;
+
+const GRID_INTERACTION_MODE = 'FIELD_ONLY';
+const fieldState = {
+  pressed: false,
+  inside: false,
+  anchorX: 0.5,
+  anchorY: 0.5,
+  rawDX: 0,
+  rawDY: 0,
+  targetDX: 0,
+  targetDY: 0,
+  clothDX: 0,
+  clothDY: 0,
+  clothVX: 0,
+  clothVY: 0,
+  clothDistNorm: 0,
+  strainNorm: 0,
+  speedNorm: 0,
+  energy: 0,
+  lastMoveTime: performance.now(),
+  lastX: 0.5,
+  lastY: 0.5
+};
+let fieldLastFrameTime = performance.now();
+
+// Audio nodes
+let masterGain, synthGainNode, synthFilterNode, drumGainNode, drumFilterNode2, currentOsc;
+let synthReverbNode = null, synthReverbGain = null;
+let synthCurrentFreq = 440, synthTargetFreq = 440;
+let glideTimer = null;
+
+// BPM estimation
+let triggerTimestamps = [];  // last 12 trigger times (ms)
+let estimatedBPM = 0;
+let bpmUpdateTimer = 0;
+
+// Trail
+let trail = [];
+let trailCounter = 0;
+const TRAIL_PALETTE = [
+  '#F24D58','#F28D33','#F2CC33','#4DD972','#33BFE6',
+  '#6680F2','#B359E6','#E666B3','#66E6B3','#E6A666',
+];
+
+// ── Helpers ──
+function $(id) { return document.getElementById(id); }
+function val(id) { return parseInt($(id).value); }
+
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function clamp01(v) { return clamp(v, 0, 1); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function expEase(x, k = 3.0) { return 1 - Math.exp(-Math.max(0, x) * k); }
+function smoothStep(edge0, edge1, x) {
+  const t = clamp((x - edge0) / (edge1 - edge0), 0, 1);
+  return t * t * (3 - 2 * t);
+}
+function updateFieldStatusUI() {
+  const warp = getFieldWarpState();
+  if ($('fieldXVal')) $('fieldXVal').textContent = (warp.active ? warp.swingOffset : 0).toFixed(2);
+  if ($('fieldToneVal')) $('fieldToneVal').textContent = (warp.active ? warp.toneWarp : 0).toFixed(2);
+  if ($('fieldDepthVal')) $('fieldDepthVal').textContent = (warp.active ? warp.zLift : 0).toFixed(2);
+  if ($('fieldEnergyVal')) $('fieldEnergyVal').textContent = (warp.active ? warp.energy : 0).toFixed(2);
+  if ($('touchMuteInfo')) {
+    $('touchMuteInfo').textContent = (fieldState.pressed || warp.energy > 0.02) ? 'FIELD DRAG' : 'FIELD CTRL';
+  }
+}
+function beginFieldDrag(x, y) {
+  initAudio();
+  fieldState.pressed = true;
+  fieldState.inside = true;
+  pointerPos = { x, y };
+  fieldState.anchorX = x;
+  fieldState.anchorY = y;
+  fieldState.rawDX = 0;
+  fieldState.rawDY = 0;
+  fieldState.targetDX = 0;
+  fieldState.targetDY = 0;
+  fieldState.clothDX *= 0.25;
+  fieldState.clothDY *= 0.25;
+  fieldState.clothVX *= 0.18;
+  fieldState.clothVY *= 0.18;
+  fieldState.energy *= 0.35;
+  fieldState.lastMoveTime = performance.now();
+  fieldState.lastX = x;
+  fieldState.lastY = y;
+  mouseDown = true;
+  kineticAccum = 0;
+  if (!hasStarted) {
+    hasStarted = true;
+    $('startHint').style.opacity = '0';
+  }
+  if (!autoPlaying) {
+    $('noteDisplay').textContent = 'FIELD';
+    $('noteInfo').textContent = 'INDIRECT';
+  }
+  updateFieldStatusUI();
+}
+function moveFieldDrag(x, y) {
+  pointerPos = { x, y };
+  if (!fieldState.pressed) {
+    updateFieldStatusUI();
+    return;
+  }
+  const now = performance.now();
+  const dtMs = Math.max(8, now - fieldState.lastMoveTime);
+  const dx = x - fieldState.lastX;
+  const dy = y - fieldState.lastY;
+  const speed = Math.hypot(dx, dy) / dtMs;
+  fieldState.speedNorm = clamp(speed / 0.00115, 0, 2.0);
+  fieldState.lastMoveTime = now;
+  fieldState.lastX = x;
+  fieldState.lastY = y;
+
+  fieldState.rawDX = x - fieldState.anchorX;
+  fieldState.rawDY = y - fieldState.anchorY;
+  const rawDistNorm = clamp(Math.hypot(fieldState.rawDX, fieldState.rawDY) / 0.34, 0, 2.0);
+  const resistance = expEase(rawDistNorm, 2.15);
+  const yieldFactor = lerp(0.97, 0.52, resistance);
+  const sidewaysBias = lerp(1.00, 0.94, resistance);
+  fieldState.targetDX = fieldState.rawDX * yieldFactor * sidewaysBias;
+  fieldState.targetDY = fieldState.rawDY * yieldFactor * 0.92;
+  updateFieldStatusUI();
+}
+function endFieldDrag() {
+  fieldState.pressed = false;
+  fieldState.targetDX = 0;
+  fieldState.targetDY = 0;
+  fieldState.inside = false;
+  mouseDown = autoPlaying;
+  if (!autoPlaying) {
+    $('noteDisplay').textContent = '--';
+    $('noteInfo').textContent = '--';
+  }
+  updateFieldStatusUI();
+}
+function updateFieldState(now = performance.now()) {
+  const dt = Math.min(0.05, Math.max(0.001, (now - fieldLastFrameTime) / 1000));
+  fieldLastFrameTime = now;
+
+  const rawDist = Math.hypot(fieldState.rawDX, fieldState.rawDY);
+  const rawNorm = clamp(rawDist / 0.34, 0, 2.0);
+  const heavy = smoothStep(0.10, 1.0, rawNorm);
+  const spring = lerp(26, 8.2, heavy);
+  const damping = lerp(10.4, 5.4, heavy);
+
+  const ax = (fieldState.targetDX - fieldState.clothDX) * spring - fieldState.clothVX * damping;
+  const ay = (fieldState.targetDY - fieldState.clothDY) * spring - fieldState.clothVY * damping;
+  fieldState.clothVX += ax * dt;
+  fieldState.clothVY += ay * dt;
+  fieldState.clothDX += fieldState.clothVX * dt;
+  fieldState.clothDY += fieldState.clothVY * dt;
+
+  if (!fieldState.pressed) {
+    fieldState.rawDX *= Math.exp(-dt / 0.34);
+    fieldState.rawDY *= Math.exp(-dt / 0.34);
+    fieldState.targetDX = 0;
+    fieldState.targetDY = 0;
+  }
+
+  const strain = Math.hypot(fieldState.rawDX - fieldState.clothDX, fieldState.rawDY - fieldState.clothDY);
+  fieldState.strainNorm = clamp(strain / 0.14, 0, 2.0);
+  fieldState.clothDistNorm = clamp(Math.hypot(fieldState.clothDX, fieldState.clothDY) / 0.30, 0, 2.0);
+
+  const clothCurve = expEase(fieldState.clothDistNorm, 1.9);
+  const strainCurve = expEase(fieldState.strainNorm, 2.5);
+  const speedCurve = expEase(fieldState.speedNorm, 1.35);
+  const velocityCurve = expEase(Math.hypot(fieldState.clothVX, fieldState.clothVY) / 0.0023, 1.6);
+  const targetEnergy = fieldState.pressed
+    ? clamp(clothCurve * 0.18 + strainCurve * 0.50 + speedCurve * 0.12, 0, 0.82)
+    : clamp(clothCurve * 0.12 + strainCurve * 0.28 + velocityCurve * 0.24, 0, 0.58);
+
+  const attack = 1 - Math.exp(-dt / 0.075);
+  const release = 1 - Math.exp(-dt / 0.48);
+  fieldState.energy += (targetEnergy - fieldState.energy) * (fieldState.pressed ? attack : release);
+  fieldState.speedNorm *= Math.exp(-dt / 0.18);
+  updateFieldStatusUI();
+}
+function getFieldWarpState() {
+  const dx = clamp(fieldState.clothDX / 0.20, -1.8, 1.8);
+  const dy = clamp(fieldState.clothDY / 0.20, -1.8, 1.8);
+  const energyCurve = expEase(fieldState.energy, 2.8);
+  const dragCurve = expEase(fieldState.clothDistNorm, 2.2);
+  const strainCurve = expEase(fieldState.strainNorm, 3.0);
+  const speedCurve = expEase(fieldState.speedNorm, 1.7);
+  const active = fieldState.pressed || fieldState.energy > 0.015 || fieldState.clothDistNorm > 0.01;
+  if (!active) {
+    return {
+      active: false,
+      swingOffset: 0,
+      toneWarp: 0,
+      drive: 0,
+      zLift: 0,
+      energy: 0,
+      dragCurve: 0,
+      strainCurve: 0,
+      pathXOffset: 0,
+      pathYOffset: 0
+    };
+  }
+  const tensionBoost = clamp(0.30 + dragCurve * 0.45 + strainCurve * 0.65 + speedCurve * 0.10, 0, 1.35);
+  return {
+    active: true,
+    swingOffset: dx * 0.08 * tensionBoost,
+    toneWarp: clamp((-dy) * 0.30 * (0.90 + dragCurve * 0.18 + strainCurve * 0.28), -0.75, 0.75),
+    drive: clamp(energyCurve * 0.14 + strainCurve * 0.18 + dragCurve * 0.10 + Math.max(0, -dy) * 0.05, 0, 0.42),
+    zLift: clamp(energyCurve * 0.05 + strainCurve * 0.06 + speedCurve * 0.03, 0, 0.14),
+    energy: energyCurve,
+    dragCurve,
+    strainCurve,
+    pathXOffset: fieldState.clothDX * (0.08 + dragCurve * 0.08),
+    pathYOffset: fieldState.clothDY * (0.08 + dragCurve * 0.08)
+  };
+}
+
+// ── Populate all <select> elements ──
+function populateSelects() {
+  // Scales
+  const scSel = $('scaleSelect');
+  SCALES.forEach((s, i) => {
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = s.name;
+    if (s.name === 'Chromatic') opt.selected = true;
+    scSel.appendChild(opt);
+  });
+
+  // Tunings
+  const tuSel = $('tuningSelect');
+  TUNINGS.forEach((t, i) => {
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = t.name;
+    if (t.name === 'Iceface') opt.selected = true;
+    tuSel.appendChild(opt);
+  });
+
+  // Base note (C2 to C6)
+  const bnSel = $('baseNote');
+  for (let n = 36; n <= 84; n++) {
+    const opt = document.createElement('option');
+    opt.value = n;
+    opt.textContent = NOTE_NAMES[n % 12] + Math.floor(n / 12 - 1);
+    if (n === 60) opt.selected = true;
+    bnSel.appendChild(opt);
+  }
+
+  // Octave spread
+  const osSel = $('octaveSpread');
+  for (let o = 1; o <= 4; o++) {
+    const opt = document.createElement('option');
+    opt.value = o; opt.textContent = o;
+    if (o === 2) opt.selected = true;
+    osSel.appendChild(opt);
+  }
+
+  // Waveform
+  const wfSel = $('waveform');
+  ['sine','triangle','square','sawtooth'].forEach((w, i) => {
+    const opt = document.createElement('option');
+    opt.value = w; opt.textContent = w.charAt(0).toUpperCase() + w.slice(1);
+    if (w === 'sine') opt.selected = true;
+    wfSel.appendChild(opt);
+  });
+
+  // Octave shift
+  const shSel = $('octaveShift');
+  for (let s = -2; s <= 2; s++) {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s > 0 ? '+' + s : s;
+    if (s === 0) opt.selected = true;
+    shSel.appendChild(opt);
+  }
+
+  // Drum presets
+  const dpSel = $('drumPreset');
+  Object.keys(DRUM_PRESETS).forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    dpSel.appendChild(opt);
+  });
+  // Global Presets
+  const gpSel = $('globalPreset');
+  Object.keys(GLOBAL_PRESETS).forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    gpSel.appendChild(opt);
+  });
+  gpSel.addEventListener('change', () => {
+    if (gpSel.value) applyGlobalPreset(GLOBAL_PRESETS[gpSel.value]);
+  });
+
+  // Add "markCustom" to all inputs
+  document.querySelectorAll('input, select:not(#globalPreset), .mode-btn').forEach(el => {
+    el.addEventListener('click', markCustom);
+    el.addEventListener('input', markCustom);
+    el.addEventListener('change', markCustom);
+  });
+}
+
+// ── Audio Init (must be inside user gesture) ──
+function initAudio() {
+  if (audioCtx) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return;
+  }
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.7;
+  masterGain.connect(audioCtx.destination);
+
+  // Synth chain: osc → filter → gain → master
+  synthFilterNode = audioCtx.createBiquadFilter();
+  synthFilterNode.type = 'lowpass';
+  synthFilterNode.frequency.value = 8000;
+  synthFilterNode.Q.value = 2;
+
+  synthGainNode = audioCtx.createGain();
+  synthGainNode.gain.value = 0;
+
+  synthFilterNode.connect(synthGainNode);
+  synthGainNode.connect(masterGain);
+
+  // Add lush algorithmic reverb for the synth
+  synthReverbNode = audioCtx.createConvolver();
+  const rate = audioCtx.sampleRate;
+  const length = rate * 2.5; // 2.5s tail
+  const buffer = audioCtx.createBuffer(2, length, rate);
+  for (let i = 0; i < length; i++) {
+    const decay = Math.exp(-i / (rate * 0.7));
+    buffer.getChannelData(0)[i] = (Math.random() * 2 - 1) * decay;
+    buffer.getChannelData(1)[i] = (Math.random() * 2 - 1) * decay;
+  }
+  synthReverbNode.buffer = buffer;
+  
+  synthReverbGain = audioCtx.createGain();
+  synthReverbGain.gain.value = val('synthReverb') / 100;
+  
+  synthGainNode.connect(synthReverbNode);
+  synthReverbNode.connect(synthReverbGain);
+  synthReverbGain.connect(masterGain);
+
+  currentOsc = audioCtx.createOscillator();
+  currentOsc.type = 'sawtooth';
+  currentOsc.frequency.value = 440;
+  currentOsc.connect(synthFilterNode);
+  currentOsc.start();
+
+  // Drum chain: gain → filter → master
+  drumGainNode = audioCtx.createGain();
+  drumGainNode.gain.value = 0.5;
+
+  drumFilterNode2 = audioCtx.createBiquadFilter();
+  drumFilterNode2.type = 'lowpass';
+  drumFilterNode2.frequency.value = 20000;
+  drumFilterNode2.Q.value = 0.7;
+
+  drumGainNode.connect(drumFilterNode2);
+  drumFilterNode2.connect(masterGain);
+
+  // Glide update at ~200Hz
+  glideTimer = setInterval(updateGlide, 5);
+
+  console.log('Audio initialized, sampleRate:', audioCtx.sampleRate);
+}
+
+['touchstart', 'pointerdown', 'click'].forEach(evt => {
+  document.addEventListener(evt, () => {
+    if (!audioCtx || audioCtx.state === 'suspended') initAudio();
+  }, { passive: true });
+});
+
+// ── Note Array ──
+function buildNoteArray() {
+  const scaleIdx = val('scaleSelect');
+  const baseNote = val('baseNote');
+  const octaves = val('octaveSpread');
+  const intervals = SCALES[scaleIdx].intervals;
+  const notes = [];
+  for (let o = 0; o < octaves; o++) {
+    for (const iv of intervals) {
+      const note = baseNote + o * 12 + iv;
+      if (note >= 0 && note <= 127) notes.push(note);
+    }
+  }
+  currentNoteArray = [...new Set(notes)].sort((a, b) => a - b);
+  kineticSeqIndex = 0;
+}
+
+// ── Frequency ──
+function midiToFreq(note, extraCents = 0) {
+  const pc = note % 12;
+  const octShift = val('octaveShift');
+  const tuningIdx = val('tuningSelect');
+  const microCents = TUNINGS[tuningIdx].cents[pc] || 0;
+  const nVal = val('tdnN') / 100;
+  const isDiatonic = DIATONIC.has(pc);
+  const dynamicCents = isDiatonic ? 0 : (1 - nVal) * 100;
+  const totalCents = (note + octShift * 12 - 69) * 100 + microCents + dynamicCents + extraCents;
+  return 440 * Math.pow(2, totalCents / 1200);
+}
+
+// ── Synth ──
+function playSynthNote(note, velocityMod = 1.0, cutoffMod = 1.0, extraPitchCents = 0) {
+  if (!audioCtx) return;
+  synthTargetFreq = midiToFreq(note, extraPitchCents);
+  
+  // ベースとなる設定値を取得
+  const baseVolume = val('synthVol') / 100;
+  const baseCutoff = val('cutoff') / 100;
+  const reso = val('resonance') / 100;
+
+  // Nパラメータによる動的なモジュレーションを適用
+  const finalVolume = baseVolume * velocityMod;
+  const finalCutoff = baseCutoff * cutoffMod;
+
+  // カットオフの変化幅をさらに拡大 (最低周波数を下げる)
+  const cutoffHz = Math.min(20 + 80 * Math.pow(300, finalCutoff), audioCtx.sampleRate * 0.45);
+  const now = audioCtx.currentTime;
+
+  // エンベロープの時間をvelocityModに連動させる（Z-Depth 100% 時のアタック遅延効果を25%に弱める: 0.08 -> 0.02）
+  const attackTime = 0.005 + (1.0 - velocityMod) * 0.02; // 0.005s 〜 0.025s
+  const sustainTime = 0.05 + velocityMod * 0.07; // 0.05s 〜 0.12s
+  const releaseTime = 0.03 + velocityMod * 0.12; // 0.03s 〜 0.15s
+
+  synthFilterNode.frequency.setTargetAtTime(cutoffHz, now, attackTime);
+  synthFilterNode.Q.setTargetAtTime(0.5 + reso * 20, now, 0.01);
+
+  const wave = $('waveform').value;
+  if (currentOsc.type !== wave) currentOsc.type = wave;
+
+  // Attack → sustain → release
+  synthGainNode.gain.cancelScheduledValues(now);
+  synthGainNode.gain.setValueAtTime(synthGainNode.gain.value, now);
+  synthGainNode.gain.linearRampToValueAtTime(finalVolume * 0.4, now + attackTime);
+  synthGainNode.gain.setTargetAtTime(0, now + sustainTime, releaseTime);
+}
+
+function updateGlide() {
+  if (!currentOsc) return;
+  const glideAmt = val('glide') / 100;
+  if (glideAmt < 0.01) {
+    synthCurrentFreq = synthTargetFreq;
+  } else {
+    const coeff = Math.exp(-0.005 / (0.002 + glideAmt * 0.3));
+    synthCurrentFreq = synthCurrentFreq * coeff + synthTargetFreq * (1 - coeff);
+  }
+  currentOsc.frequency.value = synthCurrentFreq;
+}
+
+// ── Drum Synthesis ──
+function playDrum(type, velocity) {
+  if (!audioCtx) return;
+  const vol = val('drumVol') / 100;
+  const vel = velocity * vol;
+  if (vel < 0.01) return;
+
+  const sr = audioCtx.sampleRate;
+  let duration, genFn;
+
+  if (type === 'kick') {
+    duration = 0.4;
+    genFn = (i) => {
+      const t = i / sr;
+      const pitchSweep = 45 + 115 * Math.exp(-t * 28);
+      const env = Math.exp(-t * 7);
+      const click = t < 0.006 ? (1 - t / 0.006) * 0.7 : 0;
+      return (Math.sin(t * pitchSweep * Math.PI * 2) * env + click) * vel * 1.2;
+    };
+  } else if (type === 'snare') {
+    duration = 0.35;
+    genFn = (i) => {
+      const t = i / sr;
+      const noise = Math.random() * 2 - 1;
+      const body = Math.sin(t * 180 * Math.PI * 2) * Math.exp(-t * 12);
+      const noiseEnv = noise * Math.exp(-t * 15);
+      const transient = t < 0.003 ? (1 - t / 0.003) : 0;
+      const snap = Math.sin(t * 800 * Math.PI * 2) * Math.exp(-t * 40) * 0.3;
+      return (body * 0.4 + noiseEnv * 0.5 + snap + transient) * vel * 1.5;
+    };
+  } else {
+    duration = 0.08;
+    genFn = (i) => {
+      const t = i / sr;
+      const noise = Math.random() * 2 - 1;
+      return noise * Math.exp(-t * 80) * 0.25 * vel;
+    };
+  }
+
+  const len = Math.ceil(sr * duration);
+  const buf = audioCtx.createBuffer(1, len, sr);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = genFn(i);
+
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  src.connect(drumGainNode);
+  src.start();
+}
+
+function triggerDrumStep(fieldWarp = null) {
+  if (drumPattern.length === 0) return;
+  const idx = drumStepIndex % drumPattern.length;
+  const step = drumPattern[idx];
+  const toneWarp = fieldWarp ? fieldWarp.toneWarp : 0;
+  const driveWarp = fieldWarp ? fieldWarp.drive : 0;
+  const kickVel = clamp(0.9 + driveWarp * 0.18, 0.2, 1.4);
+  const snareVel = clamp(0.8 + driveWarp * 0.15 + Math.max(0, toneWarp) * 0.08, 0.2, 1.3);
+  const hatVel = clamp(0.6 + Math.max(0, toneWarp) * 0.22 + driveWarp * 0.10, 0.1, 1.3);
+  if (step.k) playDrum('kick', kickVel);
+  if (step.s) playDrum('snare', snareVel);
+  if (step.h) playDrum('hihat', hatVel);
+  if (drumFilterNode2 && audioCtx) {
+    const now = audioCtx.currentTime;
+    const baseFilter = 60 * Math.pow(300, val('drumFilter') / 100);
+    const warpFilter = clamp(1 + toneWarp * 0.55 + driveWarp * 0.18, 0.35, 2.2);
+    drumFilterNode2.frequency.setTargetAtTime(Math.min(baseFilter * warpFilter, audioCtx.sampleRate * 0.45), now, 0.02);
+  }
+  $('drumStepInfo').textContent = 'STEP: ' + (idx + 1) + '/' + drumPattern.length;
+  drumStepIndex = (drumStepIndex + 1) % drumPattern.length;
+  renderDrumGrid();
+}
+
+// ── Kinetic Engine ──
+function kineticTick(dx, dy) {
+  if (currentNoteArray.length === 0) return;
+  const fieldWarp = getFieldWarpState();
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < 0.0001) return;
+  kineticAccum += dist * (1 + fieldWarp.energy * 0.18 + fieldWarp.dragCurve * 0.12);
+
+  const baseStepSize = val('stepSize') / 1000;
+  const nVal = val('tdnN') / 100;
+  const swingBase = val('swing') / 100;
+  const swingVal = clamp(swingBase + fieldWarp.swingOffset, 0.24, 0.86);
+  const zDepthAmt = clamp(val('zDepth') / 100 + fieldWarp.zLift, 0, 1);
+
+  const noteIdx = Math.min(kineticSeqIndex, currentNoteArray.length - 1);
+  const currentNote = currentNoteArray[noteIdx];
+  const pc = currentNote % 12;
+  const isDiatonic = DIATONIC.has(pc);
+
+  let baseStep;
+  let rawVelocityMod = 1.0;
+  let rawCutoffMod = 1.0;
+
+  if (timingMode === 'tdn') {
+    if (isDiatonic) {
+      baseStep = baseStepSize;
+    } else if (nVal < 0.001) {
+      baseStep = baseStepSize;
+      rawVelocityMod = 0.01;
+      rawCutoffMod = 0.05;
+    } else {
+      baseStep = baseStepSize * nVal;
+      rawVelocityMod = Math.pow(nVal, 4.0);
+      rawCutoffMod = 0.1 + 0.9 * Math.pow(nVal, 2.0);
+    }
+  } else {
+    if (lastPlayedNote !== null) {
+      const semitones = Math.abs(currentNote - lastPlayedNote);
+      const stretch = 1 + (Math.max(semitones, 1) - 1) / 10;
+      const factor = 1 + (stretch - 1) * nVal;
+      baseStep = baseStepSize * factor;
+      const leapPower = Math.max(0, stretch - 1);
+      rawVelocityMod = 0.02 + 0.98 * Math.min(Math.pow(leapPower, 1.5) * 1.5, 1.0);
+      rawCutoffMod = 0.05 + 0.95 * Math.min(Math.pow(leapPower, 1.0) * 1.5, 1.0);
+    } else {
+      baseStep = baseStepSize;
+    }
+  }
+
+  const velocityMod = 1.0 - zDepthAmt * (1.0 - rawVelocityMod);
+  const cutoffMod = 1.0 - zDepthAmt * (1.0 - rawCutoffMod);
+  const finalVelocityMod = clamp(velocityMod * (1 + fieldWarp.drive * 0.42), 0.01, 2.0);
+  const finalCutoffMod = clamp(cutoffMod * (1 + fieldWarp.toneWarp * 0.55), 0.03, 2.4);
+
+  const swingFactor = (kineticStepCount % 2 === 0)
+    ? (2 * swingVal)
+    : (2 * (1 - swingVal));
+  const effectiveStep = baseStep * swingFactor;
+
+  if (effectiveStep > 0.0001 && kineticAccum >= effectiveStep) {
+    kineticAccum = kineticAccum % Math.max(effectiveStep, 0.001);
+    kineticStepCount++;
+
+    const note = currentNoteArray[kineticSeqIndex % currentNoteArray.length];
+    lastPlayedNote = note;
+
+    const clothPtForPitch = getClothVisualPoint(mousePos.x, mousePos.y, fieldWarp, 1.0);
+    const visualPitchDeltaY = mousePos.y - clothPtForPitch.y;
+    const pitchBlendAmt = 0.38 + fieldWarp.dragCurve * 0.26 + fieldWarp.energy * 0.22;
+    const pitchWarpCents = clamp(visualPitchDeltaY * 900 * pitchBlendAmt, -35, 35);
+
+    playSynthNote(note, finalVelocityMod, finalCutoffMod, pitchWarpCents);
+    triggerDrumStep(fieldWarp);
+
+    const noteName = NOTE_NAMES[note % 12] + Math.floor(note / 12 - 1);
+    const pitchSuffix = Math.abs(pitchWarpCents) >= 1 ? ` ${pitchWarpCents > 0 ? '+' : ''}${Math.round(pitchWarpCents)}c` : '';
+    addTrail(clothPtForPitch.x, clothPtForPitch.y, noteName, finalVelocityMod);
+    $('noteDisplay').textContent = noteName;
+    $('noteInfo').textContent = noteName + pitchSuffix;
+
+    const now = performance.now();
+    triggerTimestamps.push(now);
+    if (triggerTimestamps.length > 12) triggerTimestamps.shift();
+    if (triggerTimestamps.length >= 3) {
+      const intervals = [];
+      for (let i = 1; i < triggerTimestamps.length; i++) {
+        intervals.push(triggerTimestamps[i] - triggerTimestamps[i - 1]);
+      }
+      const avgMs = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+      if (avgMs > 0) {
+        estimatedBPM = Math.round(60000 / avgMs / 2);
+        $('bpmInfo').textContent = '≈ ' + estimatedBPM + ' TEMPO';
+      }
+    }
+
+    advanceIndex();
+  }
+}
+
+function advanceIndex() {
+  const count = currentNoteArray.length;
+  if (count <= 1) return;
+  switch (direction) {
+    case 'up':
+      kineticSeqIndex = (kineticSeqIndex + 1) % count; break;
+    case 'down':
+      kineticSeqIndex = (kineticSeqIndex - 1 + count) % count; break;
+    case 'bounce':
+      kineticSeqIndex += bounceDir;
+      if (kineticSeqIndex >= count - 1) { kineticSeqIndex = count - 1; bounceDir = -1; }
+      if (kineticSeqIndex <= 0) { kineticSeqIndex = 0; bounceDir = 1; }
+      break;
+    case 'random':
+      kineticSeqIndex = Math.floor(Math.random() * count); break;
+  }
+}
+
+// ── Trail ──
+function addTrail(x, y, note, velocityMod = 1.0) {
+  trail.push({
+    x, y, note,
+    velocityMod,
+    birth: performance.now(),
+    color: TRAIL_PALETTE[trailCounter++ % TRAIL_PALETTE.length],
+    size: 2 + 13 * velocityMod,
+  });
+  if (trail.length > 200) trail.shift();
+}
+
+// ── Canvas ──
+const canvas = $('canvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 120));
+if (window.visualViewport) {
+  visualViewport.addEventListener('resize', resizeCanvas);
+}
+resizeCanvas();
+
+function clothDisplacePoint(nx, ny, ax, ay, cx, cy, energy) {
+  const pullX = cx - ax;
+  const pullY = cy - ay;
+  const pullLen = Math.hypot(pullX, pullY);
+  if (pullLen < 0.0001 && energy < 0.001) return { x: nx, y: ny, lift: 0 };
+
+  const dirX = pullLen > 0 ? pullX / pullLen : 0;
+  const dirY = pullLen > 0 ? pullY / pullLen : 0;
+  const normalX = -dirY;
+  const normalY = dirX;
+
+  const dxA = nx - ax;
+  const dyA = ny - ay;
+  const dxC = nx - cx;
+  const dyC = ny - cy;
+
+  const sigmaA = 0.16 + Math.min(0.14, pullLen * 0.9);
+  const sigmaC = sigmaA * 0.78;
+  const influenceA = Math.exp(-(dxA * dxA + dyA * dyA) / (2 * sigmaA * sigmaA));
+  const influenceC = Math.exp(-(dxC * dxC + dyC * dyC) / (2 * sigmaC * sigmaC));
+
+  const along = dxA * dirX + dyA * dirY;
+  const across = dxA * normalX + dyA * normalY;
+  const fold = Math.exp(-(across * across) / (2 * Math.max(0.006, sigmaA * 0.42) ** 2))
+    * Math.exp(-(Math.max(0, along) ** 2) / (2 * Math.max(0.006, sigmaA * 0.95) ** 2));
+
+  const dragAmount = (0.44 + energy * 0.28) * influenceA + (0.16 + energy * 0.14) * influenceC;
+  const gather = (0.03 + energy * 0.035) * influenceC;
+  const wrinkle = (0.016 + energy * 0.030) * fold;
+
+  let x = nx + pullX * dragAmount;
+  let y = ny + pullY * dragAmount;
+
+  x -= dxC * gather;
+  y -= dyC * gather;
+
+  x += normalX * across * wrinkle;
+  y += normalY * across * wrinkle;
+
+  const lift = clamp01(influenceA * 0.75 + influenceC * 0.55 + fold * 0.4) * (0.25 + energy * 0.9);
+  return { x, y, lift };
+}
+
+
+function getClothVisualPoint(nx, ny, warp, amount = 1) {
+  const active = fieldState.pressed || warp.active;
+  if (!active) return { x: nx, y: ny, lift: 0 };
+
+  const ax = fieldState.anchorX;
+  const ay = fieldState.anchorY;
+  const cx = clamp01(fieldState.anchorX + fieldState.clothDX);
+  const cy = clamp01(fieldState.anchorY + fieldState.clothDY);
+  const energy = warp.energy || 0;
+  const dragCurve = warp.dragCurve || 0;
+  const p = clothDisplacePoint(nx, ny, ax, ay, cx, cy, Math.min(1.15, energy * 1.05 + 0.06));
+
+  const pullX = cx - ax;
+  const pullY = cy - ay;
+  const dx = nx - cx;
+  const dy = ny - cy;
+  const localGrip = Math.exp(-((dx * dx + dy * dy) / (2 * 0.20 * 0.20)));
+  const warpAmt = clamp01((0.56 + energy * 0.34 + dragCurve * 0.12) * amount);
+  const gripAmt = (0.018 + energy * 0.028 + dragCurve * 0.010) * amount;
+
+  return {
+    x: clamp01(nx + (p.x - nx) * warpAmt + pullX * localGrip * gripAmt),
+    y: clamp01(ny + (p.y - ny) * warpAmt + pullY * localGrip * gripAmt),
+    lift: p.lift * warpAmt
+  };
+}
+
+
+function getPinchedOrbDisplay(nx, ny, warp, amount = 1) {
+  const base = getClothVisualPoint(nx, ny, warp, amount);
+  const active = fieldState.pressed || warp.active;
+  if (!active) return { ...base, scale: 1, proximity: 0, yScreenOffset: 0, brightness: 0 };
+
+  const px = pointerPos.x;
+  const py = pointerPos.y;
+  const cx = clamp01(fieldState.anchorX + fieldState.clothDX);
+  const cy = clamp01(fieldState.anchorY + fieldState.clothDY);
+  const energy = warp.energy || 0;
+  const pullDX = cx - px;
+  const pullDY = cy - py;
+  const gripCenterX = px + pullDX * 0.42;
+  const gripCenterY = py + pullDY * 0.42;
+
+  const dx = base.x - gripCenterX;
+  const dy = base.y - gripCenterY;
+  const proximity = Math.exp(-((dx * dx + dy * dy) / (2 * 0.12 * 0.12)));
+  const scale = 1 + proximity * (0.32 + energy * 0.34);
+  const yScreenOffset = -(0.010 + energy * 0.022) * proximity;
+  const brightness = proximity * (0.18 + energy * 0.22);
+
+  return { ...base, scale, proximity, yScreenOffset, brightness };
+}
+
+function drawAutoOrbitTrail(w, h, warp, now) {
+  if (!autoPlaying) {
+    autoVisualTrail = [];
+    return;
+  }
+
+  const visualPos = getPinchedOrbDisplay(mousePos.x, mousePos.y, warp, 1.0);
+  autoVisualTrail.push({
+    x: visualPos.x,
+    y: visualPos.y,
+    birth: now,
+    lift: visualPos.lift,
+    scale: visualPos.scale || 1,
+    yScreenOffset: visualPos.yScreenOffset || 0,
+    brightness: visualPos.brightness || 0,
+    proximity: visualPos.proximity || 0
+  });
+  if (autoVisualTrail.length > 72) autoVisualTrail.shift();
+  autoVisualTrail = autoVisualTrail.filter(p => (now - p.birth) < 1300);
+
+  if (autoVisualTrail.length < 2) return;
+
+  ctx.save();
+  for (let i = 1; i < autoVisualTrail.length; i++) {
+    const prev = autoVisualTrail[i - 1];
+    const curr = autoVisualTrail[i];
+    const age = (now - curr.birth) / 1300;
+    const alpha = Math.max(0, 0.24 * (1 - age));
+    if (alpha <= 0.003) continue;
+    const prevY = (prev.y + (prev.yScreenOffset || 0)) * h;
+    const currY = (curr.y + (curr.yScreenOffset || 0)) * h;
+    ctx.beginPath();
+    ctx.moveTo(prev.x * w, prevY);
+    ctx.lineTo(curr.x * w, currY);
+    ctx.strokeStyle = `rgba(199,160,107,${Math.min(0.95, alpha + (curr.brightness || 0) * 0.18)})`;
+    ctx.lineWidth = (1.1 + curr.lift * 1.2) * (0.92 + (curr.scale || 1) * 0.18);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+
+function drawAutoOrbitPrediction(w, h, warp) {
+  if (!autoPlaying) return;
+
+  const patternFn = GEO_PATTERNS[currentPatternName] || GEO_PATTERNS['Lissajous 3:2'];
+  const speed = val('autoSpeed') / 60;
+  const visualOffset = {
+    x: (warp.pathXOffset || 0) * 0.75,
+    y: (warp.pathYOffset || 0) * 0.75
+  };
+
+  const horizonSec = 1.9;
+  const samples = 56;
+  const phaseStep = (horizonSec / samples) * speed * 2.0;
+  const pts = [];
+
+  for (let i = 1; i <= samples; i++) {
+    const futurePhase = autoPhase + phaseStep * i;
+    const basePos = patternFn(futurePhase);
+    const futurePos = {
+      x: clamp(basePos.x + visualOffset.x, 0.06, 0.94),
+      y: clamp(basePos.y + visualOffset.y, 0.06, 0.94)
+    };
+    const clothPt = getPinchedOrbDisplay(futurePos.x, futurePos.y, warp, 0.92);
+    pts.push({
+      x: clothPt.x * w,
+      y: (clothPt.y + (clothPt.yScreenOffset || 0)) * h,
+      t: i / samples,
+      lift: clothPt.lift || 0,
+      scale: clothPt.scale || 1,
+      brightness: clothPt.brightness || 0
+    });
+  }
+
+  if (pts.length < 2) return;
+
+  ctx.save();
+  ctx.setLineDash([7, 7]);
+  ctx.lineDashOffset = -performance.now() * 0.015;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  for (let i = 1; i < pts.length; i++) {
+    const prev = pts[i - 1];
+    const curr = pts[i];
+    const fade = Math.max(0, 1 - curr.t);
+    const alpha = 0.24 * fade * fade;
+    if (alpha <= 0.003) continue;
+    ctx.beginPath();
+    ctx.moveTo(prev.x, prev.y);
+    ctx.lineTo(curr.x, curr.y);
+    ctx.strokeStyle = `rgba(106,159,199,${Math.min(0.9, alpha + (curr.brightness || 0) * 0.16)})`;
+    ctx.lineWidth = (1.0 + fade * 1.2 + curr.lift * 0.8) * (0.92 + (curr.scale || 1) * 0.14);
+    ctx.stroke();
+  }
+
+  ctx.setLineDash([]);
+  for (let i = 0; i < pts.length; i += 7) {
+    const p = pts[i];
+    const fade = Math.max(0, 1 - p.t);
+    const alpha = 0.10 + fade * 0.10;
+    ctx.fillStyle = `rgba(106,159,199,${Math.min(0.95, alpha + (p.brightness || 0) * 0.22)})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, (1.4 + fade * 1.0) * (0.90 + (p.scale || 1) * 0.16), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+
+function mix(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function smoothstep(edge0, edge1, x) {
+  const t = clamp01((x - edge0) / Math.max(1e-6, edge1 - edge0));
+  return t * t * (3 - 2 * t);
+}
+
+function hashNoise2(x, y) {
+  const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+  return s - Math.floor(s);
+}
+
+function smoothNoise2(x, y) {
+  const x0 = Math.floor(x), y0 = Math.floor(y);
+  const xf = x - x0, yf = y - y0;
+  const u = xf * xf * (3 - 2 * xf);
+  const v = yf * yf * (3 - 2 * yf);
+  const n00 = hashNoise2(x0, y0);
+  const n10 = hashNoise2(x0 + 1, y0);
+  const n01 = hashNoise2(x0, y0 + 1);
+  const n11 = hashNoise2(x0 + 1, y0 + 1);
+  return mix(mix(n00, n10, u), mix(n01, n11, u), v);
+}
+
+function fbmNoise2(x, y) {
+  let total = 0;
+  let amp = 0.5;
+  let freq = 1;
+  for (let i = 0; i < 4; i++) {
+    total += smoothNoise2(x * freq, y * freq) * amp;
+    freq *= 2.03;
+    amp *= 0.52;
+  }
+  return total;
+}
+
+function drawOrganicWrinkleBand(w, h, cx, cy, dirX, dirY, normalX, normalY, radius, warp, alphaBase, energy, phase) {
+  ctx.beginPath();
+  const samples = 64;
+  for (let s = 0; s <= samples; s++) {
+    const t = s / samples;
+    const theta = t * Math.PI * 2;
+    const sideX = Math.cos(theta);
+    const sideY = Math.sin(theta);
+    const squash = 0.72 + 0.28 * Math.cos(theta);
+    const noisy = 1 + (fbmNoise2(Math.cos(theta) * 2.2 + phase, Math.sin(theta) * 2.2 - phase) - 0.5) * 0.22;
+    const r = radius * squash * noisy;
+    const nx = clamp01(cx + normalX * sideX * r * 1.08 + dirX * sideY * r * 0.72);
+    const ny = clamp01(cy + normalY * sideX * r * 1.08 + dirY * sideY * r * 0.72);
+    const p = getClothVisualPoint(nx, ny, warp, 1.0);
+    const x = p.x * w;
+    const y = p.y * h;
+    if (s === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = `rgba(143,116,104,${alphaBase * (0.7 + energy * 0.8)})`;
+  ctx.lineWidth = 0.7 + energy * 0.7;
+  ctx.stroke();
+}
+
+function drawClothMesh(w, h, warp) {
+  const active = fieldState.pressed || warp.active;
+  const energy = warp.energy || 0;
+  const ax = fieldState.anchorX;
+  const ay = fieldState.anchorY;
+  const px = pointerPos.x;
+  const py = pointerPos.y;
+  const cx = clamp01(fieldState.anchorX + fieldState.clothDX);
+  const cy = clamp01(fieldState.anchorY + fieldState.clothDY);
+
+  const pullX = cx - ax;
+  const pullY = cy - ay;
+  const pullLen = Math.hypot(pullX, pullY);
+  const dirX = pullLen > 1e-6 ? pullX / pullLen : 0;
+  const dirY = pullLen > 1e-6 ? pullY / pullLen : -1;
+  const normalX = -dirY;
+  const normalY = dirX;
+  const angle = Math.atan2(dirY, dirX || 1e-6);
+
+  ctx.save();
+
+  const baseGrad = ctx.createLinearGradient(0, 0, 0, h);
+  baseGrad.addColorStop(0, 'rgba(255,252,248,0.92)');
+  baseGrad.addColorStop(0.48, 'rgba(246,240,236,0.95)');
+  baseGrad.addColorStop(1, 'rgba(233,226,222,0.98)');
+  ctx.fillStyle = baseGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  const sheenGrad = ctx.createLinearGradient(0, 0, w, h);
+  sheenGrad.addColorStop(0, 'rgba(255,255,255,0.10)');
+  sheenGrad.addColorStop(0.48, 'rgba(255,248,240,0.02)');
+  sheenGrad.addColorStop(1, 'rgba(180,160,145,0.06)');
+  ctx.fillStyle = sheenGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  const cols = 18;
+  const rows = 18;
+  const grid = [];
+
+  for (let j = 0; j <= rows; j++) {
+    const row = [];
+    for (let i = 0; i <= cols; i++) {
+      const nx = i / cols;
+      const ny = j / rows;
+      const p = active ? clothDisplacePoint(nx, ny, ax, ay, cx, cy, energy) : { x: nx, y: ny, lift: 0 };
+      const weave = fbmNoise2(nx * 11.8 + 1.7, ny * 11.8 - 0.9);
+      const thread = fbmNoise2(nx * 28.0 + 6.1, ny * 28.0 + 8.4);
+      const localDX = nx - cx;
+      const localDY = ny - cy;
+      const local = Math.exp(-((localDX * localDX + localDY * localDY) / (2 * 0.17 * 0.17)));
+      row.push({
+        nx, ny,
+        x: clamp01(p.x),
+        y: clamp01(p.y),
+        lift: p.lift,
+        weave,
+        thread,
+        local
+      });
+    }
+    grid.push(row);
+  }
+
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      const p00 = grid[j][i];
+      const p10 = grid[j][i + 1];
+      const p11 = grid[j + 1][i + 1];
+      const p01 = grid[j + 1][i];
+      const avgLift = (p00.lift + p10.lift + p11.lift + p01.lift) / 4;
+      const avgWeave = (p00.weave + p10.weave + p11.weave + p01.weave) / 4;
+      const avgThread = (p00.thread + p10.thread + p11.thread + p01.thread) / 4;
+      const avgLocal = (p00.local + p10.local + p11.local + p01.local) / 4;
+      const warm = avgWeave - 0.5;
+      const sheen = avgThread - 0.5;
+      const liftShade = avgLift * (0.12 + energy * 0.20) + avgLocal * 0.08;
+      const r = Math.round(246 - liftShade * 36 + warm * 11 + sheen * 7);
+      const g = Math.round(239 - liftShade * 28 + warm * 8 + sheen * 5);
+      const b = Math.round(234 - liftShade * 22 + warm * 5 + sheen * 3);
+      const alpha = 0.34 + avgLift * 0.12 + avgLocal * 0.06;
+
+      ctx.beginPath();
+      ctx.moveTo(p00.x * w, p00.y * h);
+      ctx.lineTo(p10.x * w, p10.y * h);
+      ctx.lineTo(p11.x * w, p11.y * h);
+      ctx.lineTo(p01.x * w, p01.y * h);
+      ctx.closePath();
+      ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+      ctx.fill();
+    }
+  }
+
+  if (active) {
+    const shadowGrad = ctx.createRadialGradient(
+      (cx - dirX * 0.035) * w,
+      (cy - dirY * 0.035) * h,
+      0,
+      (cx - dirX * 0.035) * w,
+      (cy - dirY * 0.035) * h,
+      Math.min(w, h) * (0.22 + energy * 0.12)
+    );
+    shadowGrad.addColorStop(0, `rgba(106,82,70,${0.16 + energy * 0.18})`);
+    shadowGrad.addColorStop(0.55, `rgba(130,100,88,${0.08 + energy * 0.08})`);
+    shadowGrad.addColorStop(1, 'rgba(130,100,88,0)');
+    ctx.fillStyle = shadowGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    const highlightGrad = ctx.createRadialGradient(
+      (cx + dirX * 0.012) * w,
+      (cy + dirY * 0.012) * h,
+      0,
+      (cx + dirX * 0.012) * w,
+      (cy + dirY * 0.012) * h,
+      Math.min(w, h) * (0.12 + energy * 0.08)
+    );
+    highlightGrad.addColorStop(0, `rgba(255,250,242,${0.30 + energy * 0.24})`);
+    highlightGrad.addColorStop(0.6, `rgba(255,242,230,${0.08 + energy * 0.08})`);
+    highlightGrad.addColorStop(1, 'rgba(255,242,230,0)');
+    ctx.fillStyle = highlightGrad;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  for (let i = 0; i <= cols; i++) {
+    ctx.beginPath();
+    for (let j = 0; j <= rows; j++) {
+      const p = grid[j][i];
+      const x = p.x * w;
+      const y = p.y * h;
+      if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    const columnNoise = fbmNoise2(i * 0.31 + 1.2, 1.4) - 0.5;
+    ctx.lineWidth = ((i % 3 === 0) ? 1.18 : 0.78) + Math.abs(columnNoise) * 0.22;
+    ctx.strokeStyle = `rgba(129,118,112,${0.11 + energy * 0.09 + Math.abs(columnNoise) * 0.04})`;
+    ctx.stroke();
+
+    ctx.beginPath();
+    for (let j = 0; j <= rows; j++) {
+      const p = grid[j][i];
+      const x = p.x * w + normalX * (0.3 + Math.abs(columnNoise) * 0.5);
+      const y = p.y * h + normalY * (0.3 + Math.abs(columnNoise) * 0.5);
+      if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.lineWidth = 0.36;
+    ctx.strokeStyle = `rgba(255,250,244,${0.08 + energy * 0.05})`;
+    ctx.stroke();
+  }
+
+  for (let j = 0; j <= rows; j++) {
+    ctx.beginPath();
+    for (let i = 0; i <= cols; i++) {
+      const p = grid[j][i];
+      const x = p.x * w;
+      const y = p.y * h;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    const rowNoise = fbmNoise2(0.8, j * 0.29 + 2.6) - 0.5;
+    ctx.lineWidth = ((j % 3 === 0) ? 1.12 : 0.76) + Math.abs(rowNoise) * 0.20;
+    ctx.strokeStyle = `rgba(145,132,125,${0.10 + energy * 0.08 + Math.abs(rowNoise) * 0.04})`;
+    ctx.stroke();
+
+    ctx.beginPath();
+    for (let i = 0; i <= cols; i++) {
+      const p = grid[j][i];
+      const x = p.x * w - dirX * (0.26 + Math.abs(rowNoise) * 0.45);
+      const y = p.y * h - dirY * (0.26 + Math.abs(rowNoise) * 0.45);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.lineWidth = 0.34;
+    ctx.strokeStyle = `rgba(255,247,241,${0.06 + energy * 0.05})`;
+    ctx.stroke();
+  }
+
+  if (active) {
+    for (let k = 0; k < 4; k++) {
+      const radius = 0.055 + k * 0.032 + energy * 0.018;
+      drawOrganicWrinkleBand(w, h, cx, cy, dirX, dirY, normalX, normalY, radius, warp, 0.11 - k * 0.018, energy, performance.now() * 0.00025 + k * 0.7);
+    }
+
+    ctx.save();
+    ctx.translate(px * w, py * h);
+    ctx.rotate(angle + Math.PI * 0.5);
+    const fingerShadow = ctx.createRadialGradient(0, 0, 0, 0, 0, 24 + energy * 18);
+    fingerShadow.addColorStop(0, `rgba(94,72,60,${0.12 + energy * 0.10})`);
+    fingerShadow.addColorStop(1, 'rgba(94,72,60,0)');
+    ctx.fillStyle = fingerShadow;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 16 + energy * 10, 11 + energy * 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const fingerPad = ctx.createRadialGradient(-2, -4, 0, 0, 0, 18 + energy * 8);
+    fingerPad.addColorStop(0, `rgba(255,244,236,${0.18 + energy * 0.12})`);
+    fingerPad.addColorStop(0.66, `rgba(255,232,220,${0.08 + energy * 0.08})`);
+    fingerPad.addColorStop(1, 'rgba(255,232,220,0)');
+    ctx.fillStyle = fingerPad;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 13 + energy * 6, 9 + energy * 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    const pinchGlow = ctx.createRadialGradient(cx * w, cy * h, 0, cx * w, cy * h, Math.min(w, h) * (0.08 + energy * 0.06));
+    pinchGlow.addColorStop(0, `rgba(255,251,245,${0.42 + energy * 0.24})`);
+    pinchGlow.addColorStop(0.45, `rgba(245,221,205,${0.12 + energy * 0.12})`);
+    pinchGlow.addColorStop(1, 'rgba(245,221,205,0)');
+    ctx.fillStyle = pinchGlow;
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.strokeStyle = `rgba(118,171,110,${0.22 + energy * 0.14})`;
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.arc(ax * w, ay * h, 5.2, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = `rgba(255,255,255,${0.92})`;
+    ctx.beginPath();
+    ctx.arc(px * w, py * h, 3.1 + energy * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(123,199,107,${0.66 + energy * 0.16})`;
+    ctx.beginPath();
+    ctx.arc(cx * w, cy * h, 4.2 + energy * 2.0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function render() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  ctx.clearRect(0, 0, w, h);
+  const now = performance.now();
+  updateFieldState(now);
+  const warp = getFieldWarpState();
+
+  trail = trail.filter(t => (now - t.birth) < 2500);
+  for (const t of trail) {
+    const age = (now - t.birth) / 2500;
+    const opacity = Math.max(0, 1 - age);
+    const sz = t.size * (1 + age * 0.3);
+    const vMod = t.velocityMod !== undefined ? t.velocityMod : 1.0;
+    const depthAlpha = opacity * (0.15 + 0.85 * vMod);
+    const tp = getClothVisualPoint(t.x, t.y, warp, 0.74);
+
+    ctx.globalAlpha = depthAlpha * 0.8;
+    ctx.fillStyle = t.color;
+    ctx.beginPath();
+    ctx.arc(tp.x * w, tp.y * h, sz, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (depthAlpha > 0.1) {
+      ctx.globalAlpha = depthAlpha * 0.8;
+      ctx.fillStyle = '#2A2523';
+      const fontSize = Math.max(5, Math.floor(5 + 5 * vMod));
+      ctx.font = `bold ${fontSize}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText(t.note, tp.x * w, tp.y * h - sz - 4);
+    }
+  }
+
+  drawClothMesh(w, h, warp);
+  drawAutoOrbitTrail(w, h, warp, now);
+  drawAutoOrbitPrediction(w, h, warp);
+
+  if (autoPlaying) {
+    const orb = getPinchedOrbDisplay(mousePos.x, mousePos.y, warp, 1.0);
+    const cx = orb.x * w, cy = (orb.y + (orb.yScreenOffset || 0)) * h;
+    ctx.globalAlpha = 0.16 + (orb.brightness || 0) * 0.24;
+    ctx.strokeStyle = '#C7A06B';
+    ctx.lineWidth = 0.75;
+    ctx.beginPath();
+    ctx.moveTo(cx, 0); ctx.lineTo(cx, h);
+    ctx.moveTo(0, cy); ctx.lineTo(w, cy);
+    ctx.stroke();
+
+    const aura = ctx.createRadialGradient(cx, cy, 0, cx, cy, (16 + orb.lift * 20) * (orb.scale || 1));
+    aura.addColorStop(0, `rgba(255,236,206,${0.20 + (orb.brightness || 0) * 0.55})`);
+    aura.addColorStop(1, 'rgba(255,236,206,0)');
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(cx, cy, (16 + orb.lift * 20) * (orb.scale || 1), 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.94;
+    ctx.fillStyle = '#E6BF8A';
+    ctx.beginPath();
+    ctx.arc(cx, cy, (5.4 + orb.lift * 1.6) * (orb.scale || 1), 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.75;
+    ctx.fillStyle = `rgba(255,255,255,${0.28 + (orb.brightness || 0) * 0.65})`;
+    ctx.beginPath();
+    ctx.arc(cx - (1.6 + orb.lift * 0.8), cy - (2.0 + orb.lift * 0.8), (1.8 + orb.lift * 0.55) * (0.95 + (orb.scale || 1) * 0.12), 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    autoVisualTrail = [];
+  }
+
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+
+// ── Mouse / Touch ──
+function onPointerDown(x, y) {
+  beginFieldDrag(x, y);
+}
+
+function onPointerMove(x, y) {
+  moveFieldDrag(x, y);
+}
+
+function onPointerUp() {
+  endFieldDrag();
+}
+
+function clientToCanvasNorm(clientX, clientY) {
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: clamp01((clientX - r.left) / r.width),
+    y: clamp01((clientY - r.top) / r.height)
+  };
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  const p = clientToCanvasNorm(e.clientX, e.clientY);
+  onPointerDown(p.x, p.y);
+});
+canvas.addEventListener('mousemove', (e) => {
+  const p = clientToCanvasNorm(e.clientX, e.clientY);
+  if (fieldState.pressed) onPointerMove(p.x, p.y);
+});
+window.addEventListener('mousemove', (e) => {
+  if (!fieldState.pressed) return;
+  const p = clientToCanvasNorm(e.clientX, e.clientY);
+  onPointerMove(p.x, p.y);
+});
+canvas.addEventListener('mouseup', onPointerUp);
+canvas.addEventListener('mouseleave', () => { fieldState.inside = false; if (!fieldState.pressed) updateFieldStatusUI(); });
+
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const t = e.touches[0];
+  if (!t) return;
+  const p = clientToCanvasNorm(t.clientX, t.clientY);
+  onPointerDown(p.x, p.y);
+}, { passive: false });
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  const t = e.touches[0];
+  if (!t) return;
+  const p = clientToCanvasNorm(t.clientX, t.clientY);
+  onPointerMove(p.x, p.y);
+}, { passive: false });
+canvas.addEventListener('touchend', onPointerUp);
+canvas.addEventListener('touchcancel', onPointerUp);
+window.addEventListener('mouseup', onPointerUp);
+window.addEventListener('touchend', onPointerUp, { passive: true });
+window.addEventListener('touchcancel', onPointerUp, { passive: true });
+
+// ── UI Events ──
+
+// Timing mode
+$('btnTDN').addEventListener('click', () => {
+  timingMode = 'tdn';
+  $('btnTDN').classList.add('active');
+  $('btnLeap').classList.remove('active');
+  $('modeInfo').textContent = 'T(D,N)';
+});
+$('btnLeap').addEventListener('click', () => {
+  timingMode = 'leap';
+  $('btnLeap').classList.add('active');
+  $('btnTDN').classList.remove('active');
+  $('modeInfo').textContent = 'T(D,N) LEAP';
+});
+
+// Direction
+['Up','Down','Bounce','Random'].forEach(d => {
+  $('dir' + d).addEventListener('click', () => {
+    direction = d.toLowerCase();
+    bounceDir = 1;
+    ['Up','Down','Bounce','Random'].forEach(dd => {
+      $('dir' + dd).classList.toggle('active', dd === d);
+    });
+  });
+});
+
+// Slider displays
+function bindSlider(id, displayId, fmt) {
+  $(id).addEventListener('input', () => {
+    $(displayId).textContent = fmt($(id).value);
+  });
+}
+bindSlider('tdnN', 'tdnNVal', v => (v / 100).toFixed(2));
+bindSlider('zDepth', 'zDepthVal', v => v + '%');
+bindSlider('swing', 'swingVal', v => v + '%');
+bindSlider('cutoff', 'cutoffVal', v => v + '%');
+bindSlider('resonance', 'resoVal', v => v + '%');
+bindSlider('synthReverb', 'synthReverbVal', v => {
+  if (synthReverbGain) synthReverbGain.gain.value = v / 100;
+  return v + '%';
+});
+bindSlider('synthReverb', 'synthReverbVal', v => {
+  if (synthReverbGain) synthReverbGain.gain.value = v / 100;
+  return v + '%';
+});
+bindSlider('glide', 'glideVal', v => v + '%');
+bindSlider('synthVol', 'synthVolVal', v => v + '%');
+bindSlider('drumVol', 'drumVolVal', v => v + '%');
+bindSlider('drumFilter', 'drumFilterVal', v => v + '%');
+bindSlider('stepSize', 'stepVal', v => (v / 1000).toFixed(3));
+
+// Drum volume/filter real-time
+$('drumVol').addEventListener('input', () => {
+  if (drumGainNode) drumGainNode.gain.value = val('drumVol') / 100;
+});
+$('drumFilter').addEventListener('input', () => {
+  if (drumFilterNode2) {
+    const v = val('drumFilter') / 100;
+    drumFilterNode2.frequency.value = 60 * Math.pow(300, v);
+  }
+});
+
+// Tuning auto-link
+$('tuningSelect').addEventListener('change', () => {
+  const tuning = TUNINGS[val('tuningSelect')];
+  if (tuning.iceface) {
+    $('tdnN').value = 50;
+    $('tdnNVal').textContent = '0.50';
+    const chromIdx = SCALES.findIndex(s => s.name === 'Chromatic');
+    if (chromIdx >= 0) $('scaleSelect').value = chromIdx;
+  } else {
+    $('tdnN').value = 100;
+    $('tdnNVal').textContent = '1.00';
+    const majIdx = SCALES.findIndex(s => s.name === 'Major');
+    if (majIdx >= 0) $('scaleSelect').value = majIdx;
+  }
+  buildNoteArray();
+});
+
+// Scale/base/octave change → rebuild
+['scaleSelect', 'baseNote', 'octaveSpread'].forEach(id => {
+  $(id).addEventListener('change', buildNoteArray);
+});
+
+// Drum preset
+$('drumPreset').addEventListener('change', () => {
+  const name = $('drumPreset').value;
+  drumPattern = JSON.parse(JSON.stringify(DRUM_PRESETS[name] || DRUM_PRESETS['Default']));
+  drumStepIndex = 0;
+  renderDrumGrid();
+});
+
+$('btnRandom').addEventListener('click', () => {
+  const len = drumPattern.length;
+  for (let i = 0; i < len; i++) {
+    drumPattern[i] = {
+      k: Math.random() < 0.3 ? 1 : 0,
+      s: Math.random() < 0.2 ? 1 : 0,
+      h: Math.random() < 0.4 ? 1 : 0,
+    };
+  }
+  renderDrumGrid();
+});
+
+$('btnClear').addEventListener('click', () => {
+  for (let i = 0; i < drumPattern.length; i++) {
+    drumPattern[i] = { k: 0, s: 0, h: 0 };
+  }
+  renderDrumGrid();
+});
+
+// ── Drum Grid Render ──
+function renderDrumGrid() {
+  const grid = $('drumGrid');
+  grid.innerHTML = '';
+  const types = [
+    { key: 'k', label: 'K', cls: 'active-k' },
+    { key: 's', label: 'S', cls: 'active-s' },
+    { key: 'h', label: 'H', cls: 'active-h' },
+  ];
+  const currentIdx = (drumStepIndex - 1 + drumPattern.length) % drumPattern.length;
+  for (const type of types) {
+    const row = document.createElement('div');
+    row.className = 'drum-row';
+    const lbl = document.createElement('div');
+    lbl.className = 'drum-label';
+    lbl.textContent = type.label;
+    row.appendChild(lbl);
+    for (let i = 0; i < drumPattern.length; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'drum-cell';
+      if (drumPattern[i][type.key]) cell.classList.add(type.cls);
+      if (i === currentIdx && hasStarted) cell.classList.add('current');
+      cell.textContent = drumPattern[i][type.key] ? type.label : '\u00B7';
+      const idx = i;
+      const tKey = type.key;
+      cell.addEventListener('click', () => {
+        drumPattern[idx][tKey] = drumPattern[idx][tKey] ? 0 : 1;
+        renderDrumGrid();
+      });
+      row.appendChild(cell);
+    }
+    grid.appendChild(row);
+  }
+}
+
+// ── Geometric Patterns for Auto-Play ──
+const GEO_PATTERNS = {
+  'Lissajous 3:2': (t) => ({
+    x: 0.5 + 0.4 * Math.sin(3 * t + Math.PI / 2),
+    y: 0.5 + 0.4 * Math.sin(2 * t),
+  }),
+  'Circle': (t) => ({
+    x: 0.5 + 0.38 * Math.cos(t),
+    y: 0.5 + 0.38 * Math.sin(t),
+  }),
+  'Figure 8': (t) => ({
+    x: 0.5 + 0.38 * Math.sin(t),
+    y: 0.5 + 0.38 * Math.sin(2 * t),
+  }),
+  'Rose r=cos(3t)': (t) => {
+    const r = 0.4 * Math.cos(3 * t);
+    return { x: 0.5 + r * Math.cos(t), y: 0.5 + r * Math.sin(t) };
+  },
+  'Spiral': (t) => {
+    const phase = t % (6 * Math.PI);
+    const r = (phase / (6 * Math.PI)) * 0.4;
+    return { x: 0.5 + r * Math.cos(4 * t), y: 0.5 + r * Math.sin(4 * t) };
+  },
+  'Rose r=cos(5t)': (t) => {
+    const r = 0.4 * Math.cos(5 * t);
+    return { x: 0.5 + r * Math.cos(t), y: 0.5 + r * Math.sin(t) };
+  },
+  'Lissajous 5:4': (t) => ({
+    x: 0.5 + 0.4 * Math.sin(5 * t + Math.PI / 4),
+    y: 0.5 + 0.4 * Math.sin(4 * t),
+  }),
+  'Breathing': (t) => {
+    const breath = Math.sin(t * 0.4);
+    const r = (breath * 0.5 + 0.5) * 0.38;
+    return { x: 0.5 + r * Math.cos(t * 2.3), y: 0.5 + r * Math.sin(t * 2.3) };
+  },
+  'Square': (t) => {
+    const n = 4;
+    const progress = ((t % (2 * Math.PI)) / (2 * Math.PI)) * n;
+    const idx = Math.floor(progress);
+    const frac = progress - idx;
+    const a1 = (idx / n) * 2 * Math.PI - Math.PI / 4;
+    const a2 = ((idx + 1) / n) * 2 * Math.PI - Math.PI / 4;
+    const r = 0.34;
+    return {
+      x: 0.5 + r * (Math.cos(a1) * (1 - frac) + Math.cos(a2) * frac),
+      y: 0.5 + r * (Math.sin(a1) * (1 - frac) + Math.sin(a2) * frac),
+    };
+  },
+  'Pentagon': (t) => {
+    const n = 5;
+    const progress = ((t % (2 * Math.PI)) / (2 * Math.PI)) * n;
+    const idx = Math.floor(progress);
+    const frac = progress - idx;
+    const a1 = (idx / n) * 2 * Math.PI - Math.PI / 2;
+    const a2 = ((idx + 1) / n) * 2 * Math.PI - Math.PI / 2;
+    const r = 0.38;
+    return {
+      x: 0.5 + r * (Math.cos(a1) * (1 - frac) + Math.cos(a2) * frac),
+      y: 0.5 + r * (Math.sin(a1) * (1 - frac) + Math.sin(a2) * frac),
+    };
+  },
+  'Random Walk': (() => {
+    let rx = 0.5, ry = 0.5;
+    return (t) => {
+      rx += (Math.random() - 0.5) * 0.03;
+      ry += (Math.random() - 0.5) * 0.03;
+      rx = Math.max(0.08, Math.min(0.92, rx));
+      ry = Math.max(0.08, Math.min(0.92, ry));
+      return { x: rx, y: ry };
+    };
+  })(),
+  'Trefoil': (t) => {
+    // 3D trefoil knot projected to 2D
+    const x = Math.sin(t) + 2 * Math.sin(2 * t);
+    const y = Math.cos(t) - 2 * Math.cos(2 * t);
+    const r = 3.2;
+    return { x: 0.5 + x / r * 0.42, y: 0.5 + y / r * 0.42 };
+  },
+  'Hypotrochoid': (t) => {
+    // R=5, r=3, d=5
+    const R = 5, r = 3, d = 4.5;
+    const x = (R - r) * Math.cos(t) + d * Math.cos((R - r) / r * t);
+    const y = (R - r) * Math.sin(t) - d * Math.sin((R - r) / r * t);
+    return { x: 0.5 + x / 10 * 0.42, y: 0.5 + y / 10 * 0.42 };
+  },
+  'Epitrochoid': (t) => {
+    // R=3, r=1, d=2.5
+    const R = 3, r = 1, d = 2.5;
+    const x = (R + r) * Math.cos(t) - d * Math.cos((R + r) / r * t);
+    const y = (R + r) * Math.sin(t) - d * Math.sin((R + r) / r * t);
+    return { x: 0.5 + x / 8 * 0.38, y: 0.5 + y / 8 * 0.38 };
+  },
+  'Star': (t) => {
+    const n = 5;
+    const progress = ((t % (2 * Math.PI)) / (2 * Math.PI)) * (n * 2);
+    const idx = Math.floor(progress);
+    const frac = progress - idx;
+    const isOuter = idx % 2 === 0;
+    const r1 = isOuter ? 0.40 : 0.18;
+    const r2 = isOuter ? 0.18 : 0.40;
+    const a1 = (idx / (n * 2)) * 2 * Math.PI - Math.PI / 2;
+    const a2 = ((idx + 1) / (n * 2)) * 2 * Math.PI - Math.PI / 2;
+    return {
+      x: 0.5 + (r1 * Math.cos(a1) * (1 - frac) + r2 * Math.cos(a2) * frac),
+      y: 0.5 + (r1 * Math.sin(a1) * (1 - frac) + r2 * Math.sin(a2) * frac),
+    };
+  },
+  'Double Pendulum': (() => {
+    let a1 = Math.PI * 0.6, a2 = Math.PI * 0.4;
+    let v1 = 0, v2 = 0;
+    let lastT = 0;
+    return (t) => {
+      const dt = Math.min(t - lastT, 0.05);
+      lastT = t;
+      const g = 9.8, L = 1;
+      const mu = 1 + 1;
+      const num1 = -g * mu * Math.sin(a1) - Math.sin(a1 - a2) * (v2*v2 + v1*v1*Math.cos(a1-a2));
+      const num2 = mu * g * Math.sin(a2) * Math.cos(a1-a2);
+      const den = mu - Math.cos(a1-a2) * Math.cos(a1-a2);
+      v1 += dt * (num1 - num2) / den;
+      const num3 = mu * (v1*v1*L*Math.sin(a1-a2) - g*Math.sin(a2) + g*Math.sin(a1)*Math.cos(a1-a2));
+      v2 += dt * num3 / den;
+      v1 *= 0.9999; v2 *= 0.9999;
+      a1 += dt * v1; a2 += dt * v2;
+      const x2 = Math.sin(a1) + Math.sin(a2);
+      const y2 = -Math.cos(a1) - Math.cos(a2);
+      return { x: 0.5 + x2 * 0.22, y: 0.5 + y2 * 0.22 };
+    };
+  })(),
+};
+
+let autoPlaying = false;
+let autoPhase = 0;
+let autoLastTime = 0;
+let autoAnimId = null;
+let currentPatternName = 'Pentagon';
+let autoBasePos = { x: 0.5, y: 0.5 };
+let prevFieldVisualOffset = { x: 0, y: 0 };
+let autoVisualTrail = [];
+
+function startAutoPlay() {
+  initAudio();
+  autoPlaying = true;
+  hasStarted = true;
+  $('startHint').style.opacity = '0';
+  $('btnPlay').style.display = 'none';
+  $('btnStop').style.display = '';
+  autoPhase = 0;
+  autoLastTime = performance.now();
+  kineticAccum = 0;
+  drumStepIndex = 0;
+  kineticStepCount = 0;
+  autoPos = { x: 0.5, y: 0.5 };
+  autoBasePos = { x: 0.5, y: 0.5 };
+  prevFieldVisualOffset = { x: 0, y: 0 };
+  autoVisualTrail = [];
+  mousePos = { x: 0.5, y: 0.5 };
+  mouseDown = true;
+  autoTick();
+}
+
+function stopAutoPlay() {
+  autoPlaying = false;
+  $('btnPlay').style.display = '';
+  $('btnStop').style.display = 'none';
+  mouseDown = fieldState.pressed;
+  autoVisualTrail = [];
+  if (autoAnimId) { cancelAnimationFrame(autoAnimId); autoAnimId = null; }
+  triggerTimestamps = [];
+  $('bpmInfo').textContent = '-- TEMPO';
+  if (!fieldState.pressed) {
+    $('noteDisplay').textContent = '--';
+    $('noteInfo').textContent = '--';
+  }
+}
+
+function autoTick() {
+  if (!autoPlaying) return;
+  autoAnimId = requestAnimationFrame(autoTick);
+
+  const now = performance.now();
+  const dt = (now - autoLastTime) / 1000;
+  autoLastTime = now;
+
+  const speed = val('autoSpeed') / 60;
+  autoPhase += dt * speed * 2.0;
+
+  const patternFn = GEO_PATTERNS[currentPatternName] || GEO_PATTERNS['Lissajous 3:2'];
+  const basePos = patternFn(autoPhase);
+  const fieldWarp = getFieldWarpState();
+  const visualOffset = {
+    x: fieldWarp.pathXOffset * 0.75,
+    y: fieldWarp.pathYOffset * 0.75
+  };
+  const newPos = {
+    x: clamp(basePos.x + visualOffset.x, 0.06, 0.94),
+    y: clamp(basePos.y + visualOffset.y, 0.06, 0.94)
+  };
+
+  const prevX = autoPos.x;
+  const prevY = autoPos.y;
+  const baseDx = basePos.x - autoBasePos.x;
+  const baseDy = basePos.y - autoBasePos.y;
+  const offsetDx = visualOffset.x - prevFieldVisualOffset.x;
+  const offsetDy = visualOffset.y - prevFieldVisualOffset.y;
+  const fieldMotionMix = 0.42 + fieldWarp.energy * 0.16;
+  const dx = baseDx + offsetDx * fieldMotionMix;
+  const dy = baseDy + offsetDy * fieldMotionMix;
+
+  autoBasePos = { x: basePos.x, y: basePos.y };
+  prevFieldVisualOffset = { x: visualOffset.x, y: visualOffset.y };
+  autoPos = { x: newPos.x, y: newPos.y };
+  mousePos = { x: newPos.x, y: newPos.y };
+  mouseDown = true;
+
+  if (Math.abs(dx) > 0.0001 || Math.abs(dy) > 0.0001) {
+    kineticTick(dx, dy);
+  }
+}
+
+// Play/Stop buttons
+$('btnPlay').addEventListener('click', startAutoPlay);
+$('btnStop').addEventListener('click', stopAutoPlay);
+
+// Pattern select
+const patSel = $('patternSelect');
+Object.keys(GEO_PATTERNS).forEach(name => {
+  const opt = document.createElement('option');
+  opt.value = name; opt.textContent = name;
+  if (name === 'Pentagon') opt.selected = true;
+  patSel.appendChild(opt);
+});
+patSel.addEventListener('change', () => {
+  currentPatternName = patSel.value;
+});
+
+// Speed slider
+bindSlider('autoSpeed', 'autoSpeedVal', v => v);
+
+// ── Init ──
+populateSelects();
+buildNoteArray();
+renderDrumGrid();
+updateFieldStatusUI();
+
+</script>
+</body>
+</html>
