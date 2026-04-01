@@ -326,18 +326,18 @@ code {
 
 <table>
   <tr><th>Dimension</th><th>Diatonic note</th><th>Non-diatonic note</th></tr>
-  <tr><td><strong>Time</strong> (step distance)</td><td>full stepSize</td><td>stepSize &times; N</td></tr>
+  <tr><td><strong>Timing</strong> (trigger threshold)</td><td>base threshold</td><td>threshold &times; N (shorter = shuffle)</td></tr>
   <tr><td><strong>Pitch</strong> (cents offset)</td><td>0&cent;</td><td>+ (1 &minus; N) &times; 100&cent;</td></tr>
 </table>
 
 <div class="box iceface">
   <strong>Example — N = 0.5, Iceface Tuning:</strong><br>
-  A C# (non-diatonic) will fire after half the normal movement distance, and its pitch will be shifted +50 cents toward D. At the same time, the Iceface tuning preset shifts C# by +50&cent; from its equal-tempered position.<br><br>
-  Both transformations converge at the same value — the pitch and time compression are unified by a single N.
+  A C# (non-diatonic) will trigger at half the normal threshold interval — arriving sooner, as if attracted to the neighbouring white key. Its pitch is also shifted +50 cents toward D. At the same time, the Iceface tuning preset shifts C# by +50&cent; from its equal-tempered position.<br><br>
+  Both transformations converge at the same value — the pitch and timing compression are unified by a single N.
 </div>
 
 <h3>Z-Depth</h3>
-<p>Controls how strongly the T(D,N) velocity and filter modulation affect the sound. At Z-Depth = 0, all notes play at equal volume and brightness regardless of their diatonic status. At Z-Depth = 100%, non-diatonic notes at low N values become very quiet and dark — pushed deep into the background, like distant layers in a 3D space.</p>
+<p>Controls velocity and filter cutoff depth. N does <strong>not</strong> affect velocity or cutoff — those are driven exclusively by Z-Depth. At Z-Depth = 0, all notes play at equal volume and brightness. At Z-Depth = 100%, notes are pushed deep into the background — quieter and darker, like distant layers in a 3D space.</p>
 
 <h3>Swing</h3>
 <p>Applies rhythmic swing to the step timing. At 50% (center), all steps are even. Increasing swing makes even-numbered steps shorter and odd-numbered steps longer, creating a shuffle or groove feel. The Field Drag system can modulate swing in real time.</p>
@@ -350,13 +350,13 @@ code {
 
 <div class="formula">
 T(D,N) mode:
-  diatonic note    &rarr; stepSize &times; 1.0
-  non-diatonic     &rarr; stepSize &times; N
+  diatonic note    &rarr; threshold (fixed)
+  non-diatonic     &rarr; threshold &times; N  (shorter interval = shuffle)
 
 T(D,N) LEAP mode:
   interval = |current &minus; previous| semitones
   stretch  = 1.0 + (interval &minus; 1) / 10      &rarr; 1st: 1.0&times;,  11th: 2.0&times;
-  step     = stepSize &times; (1 + (stretch&minus;1) &times; N)
+  threshold = base &times; (1 + (stretch&minus;1) &times; N)
 </div>
 
 <p>In LEAP mode, N scales the degree of stretch. At N = 0, all steps are equal regardless of interval. At N = 1.0, large leaps breathe naturally while stepwise motion flows quickly — a principle common to expressive melodic performance.</p>
@@ -554,7 +554,7 @@ T(D,N) LEAP mode:
 <!-- ── BPM ── -->
 <h2 id="bpm">12. BPM Display</h2>
 
-<p>The header bar shows an estimated tempo in the format <span class="label label-warn">~ 120 TEMPO</span>. This is calculated from the average interval between recent note triggers. Because timing in this instrument is spatial rather than clock-based, the BPM fluctuates with cursor speed, Field Drag energy, and step size. It serves as a reference, not a fixed metronome.</p>
+<p>The header bar shows an estimated tempo in the format <span class="label label-warn">~ 120 TEMPO</span>. This is calculated from the average interval between recent note triggers. Because timing is driven by speed and Field Drag energy, the BPM fluctuates naturally. It serves as a reference, not a fixed metronome.</p>
 
 <hr class="divider">
 

@@ -372,6 +372,14 @@ input[type="range"] {
     </div>
 
     <div class="section">
+      <div class="row">
+        <label>Speed</label>
+        <input type="range" id="autoSpeed" min="5" max="200" value="15">
+        <span class="val" id="autoSpeedVal">15</span>
+      </div>
+    </div>
+
+    <div class="section">
       <div class="section-label">SCALE & TUNING</div>
       <div class="row">
         <label>Scale</label>
@@ -477,15 +485,10 @@ input[type="range"] {
 
     <div class="section">
       <div class="section-label">KINETIC</div>
-      <div class="row">
+      <div class="row" style="display:none">
         <label>Step</label>
-        <input type="range" id="stepSize" min="5" max="500" value="172">
-        <span class="val" id="stepVal">0.172</span>
-      </div>
-      <div class="row">
-        <label>Speed</label>
-        <input type="range" id="autoSpeed" min="5" max="200" value="44">
-        <span class="val" id="autoSpeedVal">44</span>
+        <input type="range" id="stepSize" min="5" max="500" value="150">
+        <span class="val" id="stepVal">0.150</span>
       </div>
     </div>
 
@@ -1243,11 +1246,13 @@ function triggerDrumStep(fieldWarp = null) {
 function kineticTick(dx, dy) {
   if (currentNoteArray.length === 0) return;
   const fieldWarp = getFieldWarpState();
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  if (dist < 0.0001) return;
-  kineticAccum += dist * (1 + fieldWarp.energy * 0.18 + fieldWarp.dragCurve * 0.12);
 
-  const baseStepSize = val('stepSize') / 1000;
+  // Speed-based accumulator (not distance-based)
+  const rawSpeed = val('autoSpeed') / 60;
+  const speedIncrement = (1.0 / 30.0) * rawSpeed * (1 + fieldWarp.energy * 0.18 + fieldWarp.dragCurve * 0.12);
+  kineticAccum += speedIncrement;
+
+  const baseStepSize = 0.150;  // fixed 30% gate ratio
   const nVal = val('tdnN') / 100;
   const swingBase = val('swing') / 100;
   const swingVal = clamp(swingBase + fieldWarp.swingOffset, 0.24, 0.86);
@@ -1258,45 +1263,36 @@ function kineticTick(dx, dy) {
   const pc = currentNote % 12;
   const isDiatonic = DIATONIC.has(pc);
 
-  let baseStep;
-  let rawVelocityMod = 1.0;
-  let rawCutoffMod = 1.0;
+  // N → timing threshold only (no velocity/cutoff modification)
+  let baseTrigger = baseStepSize;
 
   if (timingMode === 'tdn') {
+    // T(D,N): black keys attracted to white keys — shorter threshold
     if (isDiatonic) {
-      baseStep = baseStepSize;
+      baseTrigger = baseStepSize;
     } else if (nVal < 0.001) {
-      baseStep = baseStepSize;
-      rawVelocityMod = 0.01;
-      rawCutoffMod = 0.05;
+      baseTrigger = 0.001;
     } else {
-      baseStep = baseStepSize * nVal;
-      rawVelocityMod = Math.pow(nVal, 4.0);
-      rawCutoffMod = 0.1 + 0.9 * Math.pow(nVal, 2.0);
+      baseTrigger = baseStepSize * nVal;
     }
   } else {
+    // LEAP: semitone distance stretches timing
     if (lastPlayedNote !== null) {
       const semitones = Math.abs(currentNote - lastPlayedNote);
       const stretch = 1 + (Math.max(semitones, 1) - 1) / 10;
       const factor = 1 + (stretch - 1) * nVal;
-      baseStep = baseStepSize * factor;
-      const leapPower = Math.max(0, stretch - 1);
-      rawVelocityMod = 0.02 + 0.98 * Math.min(Math.pow(leapPower, 1.5) * 1.5, 1.0);
-      rawCutoffMod = 0.05 + 0.95 * Math.min(Math.pow(leapPower, 1.0) * 1.5, 1.0);
-    } else {
-      baseStep = baseStepSize;
+      baseTrigger = baseStepSize * factor;
     }
   }
 
-  const velocityMod = 1.0 - zDepthAmt * (1.0 - rawVelocityMod);
-  const cutoffMod = 1.0 - zDepthAmt * (1.0 - rawCutoffMod);
-  const finalVelocityMod = clamp(velocityMod * (1 + fieldWarp.drive * 0.42), 0.01, 2.0);
-  const finalCutoffMod = clamp(cutoffMod * (1 + fieldWarp.toneWarp * 0.55), 0.03, 2.4);
+  // Velocity/cutoff driven by Z-Depth only (N removed)
+  const finalVelocityMod = clamp((1.0 - zDepthAmt * 0.7) * (1 + fieldWarp.drive * 0.42), 0.01, 2.0);
+  const finalCutoffMod = clamp((1.0 - zDepthAmt * 0.5) * (1 + fieldWarp.toneWarp * 0.55), 0.03, 2.4);
 
   const swingFactor = (kineticStepCount % 2 === 0)
     ? (2 * swingVal)
     : (2 * (1 - swingVal));
-  const effectiveStep = baseStep * swingFactor;
+  const effectiveStep = baseTrigger * swingFactor;
 
   if (effectiveStep > 0.0001 && kineticAccum >= effectiveStep) {
     kineticAccum = kineticAccum % Math.max(effectiveStep, 0.001);
@@ -1927,27 +1923,27 @@ function render() {
     const cx = orb.x * w, cy = (orb.y + (orb.yScreenOffset || 0)) * h;
 
     // ★ Aura - pastel blue
-    const aura = ctx.createRadialGradient(cx, cy, 0, cx, cy, (16 + orb.lift * 20) * (orb.scale || 1));
+    const aura = ctx.createRadialGradient(cx, cy, 0, cx, cy, (24 + orb.lift * 28) * (orb.scale || 1));
     aura.addColorStop(0, `rgba(130,200,235,${0.55 + (orb.brightness || 0) * 0.40})`);
     aura.addColorStop(1, 'rgba(130,200,235,0.03)');
     ctx.globalAlpha = 1;
     ctx.fillStyle = aura;
     ctx.beginPath();
-    ctx.arc(cx, cy, (16 + orb.lift * 20) * (orb.scale || 1), 0, Math.PI * 2);
+    ctx.arc(cx, cy, (24 + orb.lift * 28) * (orb.scale || 1), 0, Math.PI * 2);
     ctx.fill();
 
     // ★ Orb fill - blue
     ctx.globalAlpha = 1.0;
     ctx.fillStyle = '#5BAFDA';
     ctx.beginPath();
-    ctx.arc(cx, cy, (6.2 + orb.lift * 1.8) * (orb.scale || 1), 0, Math.PI * 2);
+    ctx.arc(cx, cy, (10 + orb.lift * 2.5) * (orb.scale || 1), 0, Math.PI * 2);
     ctx.fill();
 
     // ★ Highlight spec - white on blue
     ctx.globalAlpha = 0.80;
     ctx.fillStyle = `rgba(220,245,255,${0.60 + (orb.brightness || 0) * 0.35})`;
     ctx.beginPath();
-    ctx.arc(cx - (1.6 + orb.lift * 0.8), cy - (2.0 + orb.lift * 0.8), (1.8 + orb.lift * 0.55) * (0.95 + (orb.scale || 1) * 0.12), 0, Math.PI * 2);
+    ctx.arc(cx - (2.4 + orb.lift * 1.0), cy - (3.0 + orb.lift * 1.0), (2.8 + orb.lift * 0.7) * (0.95 + (orb.scale || 1) * 0.12), 0, Math.PI * 2);
     ctx.fill();
   } else {
     autoVisualTrail = [];
