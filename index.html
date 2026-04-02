@@ -34,24 +34,24 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
+  padding: 4px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
+  flex-shrink: 0;
 }
 .header h1 { font-size: 13px; font-weight: 900; letter-spacing: 1px; }
 .header .info { font-size: 9px; color: var(--text-dim); display: flex; gap: 8px; align-items: center; }
 
-.main { display: flex; flex: 1; overflow: hidden; }
+.main { display: flex; flex: 1; min-height: 0; overflow: hidden; }
 
 .canvas-wrap {
   position: relative;
   border-right: 1px solid var(--border);
   background: var(--bg);
-  aspect-ratio: 1 / 1;
-  max-height: 100%;
   flex-shrink: 0;
+  overflow: hidden;
 }
-#canvas { width: 100%; height: 100%; cursor: crosshair; display: block; }
+#canvas { width: 100%; height: 100%; cursor: crosshair; display: block; transform-origin: center center; }
 .note-display {
   position: absolute; top: 12px; left: 14px;
   font-size: 22px; font-weight: 900; color: var(--accent);
@@ -62,6 +62,19 @@ body {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   font-size: 12px; color: var(--text-dim); text-align: center;
   pointer-events: none; transition: opacity 0.5s;
+}
+.canvas-zoom-bar {
+  position: absolute; bottom: 6px; right: 8px;
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.75); border: 1px solid var(--border);
+  border-radius: 3px; padding: 2px 8px; z-index: 10;
+  pointer-events: auto;
+}
+.canvas-zoom-bar span {
+  font-size: 7px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.5px;
+}
+.canvas-zoom-bar input[type="range"] {
+  width: 60px; height: 3px; accent-color: var(--active);
 }
 
 .sidebar {
@@ -98,9 +111,10 @@ select {
 .controls {
   border-top: 1px solid var(--border);
   background: var(--surface);
-  padding: 8px 12px;
-  max-height: 160px;
+  padding: 6px 12px;
+  max-height: 140px;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 .drum-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .drum-grid { display: flex; flex-direction: column; gap: 2px; }
@@ -352,6 +366,11 @@ input[type="range"] {
     <canvas id="canvas"></canvas>
     <div class="note-display" id="noteDisplay">--</div>
     <div class="start-hint" id="startHint">Drag on canvas to play</div>
+    <div class="canvas-zoom-bar">
+      <span>ZOOM</span>
+      <input type="range" id="canvasZoom" min="50" max="300" value="100">
+      <span id="canvasZoomVal">100%</span>
+    </div>
   </div>
 
   <div class="sidebar">
@@ -1380,7 +1399,22 @@ function addTrail(x, y, note, velocityMod = 1.0) {
 const canvas = $('canvas');
 const ctx = canvas.getContext('2d');
 
+let canvasZoomLevel = 1.0;
+
+function sizeCanvasSquare() {
+  const wrap = document.querySelector('.canvas-wrap');
+  const headerH = document.querySelector('.header').offsetHeight;
+  const controlsH = document.querySelector('.controls').offsetHeight;
+  const sidebarW = 260;
+  const availH = window.innerHeight - headerH - controlsH;
+  const availW = window.innerWidth - sidebarW - 2;
+  const size = Math.max(200, Math.floor(Math.min(availH, availW)));
+  wrap.style.width = size + 'px';
+  wrap.style.height = size + 'px';
+}
+
 function resizeCanvas() {
+  sizeCanvasSquare();
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
   canvas.width = rect.width * dpr;
@@ -1393,6 +1427,12 @@ if (window.visualViewport) {
   visualViewport.addEventListener('resize', resizeCanvas);
 }
 resizeCanvas();
+
+$('canvasZoom').addEventListener('input', () => {
+  canvasZoomLevel = val('canvasZoom') / 100;
+  $('canvasZoomVal').textContent = val('canvasZoom') + '%';
+  canvas.style.transform = 'scale(' + canvasZoomLevel + ')';
+});
 
 function clothDisplacePoint(nx, ny, ax, ay, cx, cy, energy) {
   const pullX = cx - ax;
