@@ -1199,13 +1199,19 @@ function midiToFreq(note, extraCents = 0) {
 function playSynthNote(note, velocityMod = 1.0, cutoffMod = 1.0, extraPitchCents = 0) {
   if (!audioCtx) return;
   synthTargetFreq = midiToFreq(note, extraPitchCents);
-  
+
   const baseVolume = val('synthVol') / 100;
   const baseCutoff = val('cutoff') / 100;
   const reso = val('resonance') / 100;
 
+  // Gravity modulation: same approach as Codex/Swift — cutoff darkens, resonance rises
+  const gm = (typeof gravityFilterMod !== 'undefined') ? gravityFilterMod : 0;
+  const gravCutoffShift = -0.55 * gm;   // darken cutoff near center (like Swift version)
+  const gravResoShift = 0.75 * gm;      // raise resonance for wah effect
+
   const finalVolume = baseVolume * velocityMod;
-  const finalCutoff = baseCutoff * cutoffMod;
+  const finalCutoff = Math.max(0, Math.min(baseCutoff * cutoffMod + gravCutoffShift, 1.0));
+  const finalReso = Math.max(0, Math.min(reso + gravResoShift, 1.0));
 
   const cutoffHz = Math.min(20 + 80 * Math.pow(300, finalCutoff), audioCtx.sampleRate * 0.45);
   const now = audioCtx.currentTime;
@@ -1215,7 +1221,7 @@ function playSynthNote(note, velocityMod = 1.0, cutoffMod = 1.0, extraPitchCents
   const releaseTime = 0.03 + velocityMod * 0.12;
 
   synthFilterNode.frequency.setTargetAtTime(cutoffHz, now, attackTime);
-  synthFilterNode.Q.setTargetAtTime(0.5 + reso * 20, now, 0.01);
+  synthFilterNode.Q.setTargetAtTime(0.5 + finalReso * 20, now, 0.01);
 
   const wave = $('waveform').value;
   if (currentOsc.type !== wave) currentOsc.type = wave;
@@ -2731,7 +2737,7 @@ function tickGravityWells(now) {
     gravityVelocityX += nx * pull;
     gravityVelocityY += ny * pull;
 
-    const tempoBoost = 1.0 + falloff * falloff * 1.5;
+    const tempoBoost = 1.0 + falloff * falloff * 1.95;
     gravitySpeedModifier = Math.max(gravitySpeedModifier, tempoBoost);
 
     // Track proximity for filter modulation
@@ -2749,45 +2755,21 @@ function tickGravityWells(now) {
   gravityFilterMod += (targetMod - gravityFilterMod) * rate;
   if (gravityFilterMod < 0.001) gravityFilterMod = 0;
 
-  // ── Continuous audio modulation (like Field Drag but for gravity) ──
-  if (audioCtx && synthFilterNode && currentOsc && gravityWells.length > 0) {
-    const gm = gravityFilterMod;
-    const t = audioCtx.currentTime;
-
-    // 1. Filter cutoff: open dramatically near center
-    const baseCutoff = val('cutoff') / 100;
-    const gravCutoffBoost = 1.0 + gm * 4.0; // up to 5x brighter
-    const cutoffHz = Math.min(20 + 80 * Math.pow(300, Math.min(baseCutoff * gravCutoffBoost, 1.0)), audioCtx.sampleRate * 0.45);
-    synthFilterNode.frequency.setTargetAtTime(cutoffHz, t, 0.02);
-
-    // 2. Resonance: strong wah sweep near center
-    const baseReso = val('resonance') / 100;
-    const gravResoBoost = gm * 15;
-    const resoQ = 0.5 + baseReso * 20 + gravResoBoost;
-    synthFilterNode.Q.setTargetAtTime(Math.min(resoQ, 28), t, 0.02);
-
-    // 3. Detune: pitch wobble, ±30 cents at center (creates "sucked in" feel)
-    const detuneCents = Math.sin(performance.now() * 0.008) * gm * 30;
-    currentOsc.detune.setTargetAtTime(detuneCents, t, 0.02);
-
-    // 4. Sustained gain: keep synth audible while inside gravity well
-    //    This is key — without this, the note envelope fades and filter changes are inaudible
-    if (gm > 0.05) {
-      const baseVol = val('synthVol') / 100;
-      const gravGain = baseVol * 0.3 * gm; // sustain at up to 30% volume while in well
-      synthGainNode.gain.setTargetAtTime(Math.max(synthGainNode.gain.value, gravGain), t, 0.03);
-    }
-  }
-
-  // Reset filter/detune when no gravity wells exist
-  if (audioCtx && synthFilterNode && currentOsc && gravityWells.length === 0 && gravityFilterMod < 0.001) {
-    const t = audioCtx.currentTime;
-    const baseCutoff = val('cutoff') / 100;
-    const cutoffHz = Math.min(20 + 80 * Math.pow(300, baseCutoff), audioCtx.sampleRate * 0.45);
-    synthFilterNode.frequency.setTargetAtTime(cutoffHz, t, 0.05);
-    const baseReso = val('resonance') / 100;
-    synthFilterNode.Q.setTargetAtTime(0.5 + baseReso * 20, t, 0.05);
-    currentOsc.detune.setTargetAtTime(0, t, 0.05);
+  // Update UI to show gravity's effect on parameters
+  if (gravityFilterMod > 0.01) {
+    const baseCutoff = val('cutoff');
+    const baseReso = val('resonance');
+    const effCutoff = Math.max(0, Math.round(baseCutoff + gravityFilterMod * -55));
+    const effReso = Math.min(95, Math.round(baseReso + gravityFilterMod * 75));
+    $('cutoffVal').textContent = effCutoff + '%';
+    $('cutoffVal').style.color = '#B359E6';
+    $('resoVal').textContent = effReso + '%';
+    $('resoVal').style.color = '#B359E6';
+  } else {
+    $('cutoffVal').textContent = val('cutoff') + '%';
+    $('cutoffVal').style.color = '';
+    $('resoVal').textContent = val('resonance') + '%';
+    $('resoVal').style.color = '';
   }
 
   if (autoPlaying) {
