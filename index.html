@@ -1118,11 +1118,23 @@ function midiToFreq(note, extraCents = 0) {
   const pc = note % 12;
   const octShift = val('octaveShift');
   const tuningIdx = val('tuningSelect');
-  const microCents = TUNINGS[tuningIdx].cents[pc] || 0;
+  const tuning = TUNINGS[tuningIdx];
+  const microCents = tuning.cents[pc] || 0;
   const nVal = val('tdnN') / 100;
   const isDiatonic = DIATONIC.has(pc);
-  const dynamicCents = isDiatonic ? 0 : (1 - nVal) * 100;
-  const totalCents = (note + octShift * 12 - 69) * 100 + microCents + dynamicCents + extraCents;
+
+  let tuningCents, dynamicCents;
+  if (tuning.iceface) {
+    // Iceface系: microCentsにN=0.5相当が組込み済み → Nでスケール、dynamicCents不要
+    tuningCents = isDiatonic ? microCents : microCents * (1 - nVal) * 2;
+    dynamicCents = 0;
+  } else {
+    // 通常tuning: microCentsはそのまま、dynamicCentsで非ダイアトニック補正
+    tuningCents = microCents;
+    dynamicCents = isDiatonic ? 0 : (1 - nVal) * 100;
+  }
+
+  const totalCents = (note + octShift * 12 - 69) * 100 + tuningCents + dynamicCents + extraCents;
   return 440 * Math.pow(2, totalCents / 1200);
 }
 
@@ -2307,6 +2319,22 @@ function startAutoPlay() {
   autoVisualTrail = [];
   mousePos = { x: 0.5, y: 0.5 };
   mouseDown = true;
+
+  // Trigger first note immediately on Play
+  if (currentNoteArray.length > 0) {
+    const note = currentNoteArray[kineticSeqIndex % currentNoteArray.length];
+    lastPlayedNote = note;
+    playSynthNote(note, 1.0, 1.0, 0);
+    triggerDrumStep(null);
+    const noteName = NOTE_NAMES[note % 12] + Math.floor(note / 12 - 1);
+    addTrail(mousePos.x, mousePos.y, noteName, 1.0);
+    $('noteDisplay').textContent = noteName;
+    $('noteInfo').textContent = noteName;
+    triggerTimestamps.push(performance.now());
+    kineticStepCount++;
+    advanceIndex();
+  }
+
   autoTick();
 }
 
