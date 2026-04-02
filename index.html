@@ -1403,6 +1403,16 @@ let canvasZoomLevel = 1.0;
 
 function sizeCanvasSquare() {
   const wrap = document.querySelector('.canvas-wrap');
+  // On mobile (<=900px), let CSS handle layout (vertical stacking)
+  if (window.innerWidth <= 900) {
+    wrap.style.width = '';
+    wrap.style.height = '';
+    wrap.style.minWidth = '';
+    wrap.style.maxWidth = '';
+    wrap.style.minHeight = '';
+    wrap.style.maxHeight = '';
+    return;
+  }
   const headerH = document.querySelector('.header').offsetHeight;
   const controlsH = document.querySelector('.controls').offsetHeight;
   const sidebarW = 260;
@@ -1411,6 +1421,10 @@ function sizeCanvasSquare() {
   const size = Math.max(200, Math.floor(Math.min(availH, availW)));
   wrap.style.width = size + 'px';
   wrap.style.height = size + 'px';
+  wrap.style.minWidth = size + 'px';
+  wrap.style.maxWidth = size + 'px';
+  wrap.style.minHeight = size + 'px';
+  wrap.style.maxHeight = size + 'px';
 }
 
 function resizeCanvas() {
