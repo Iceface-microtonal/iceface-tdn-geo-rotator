@@ -63,19 +63,28 @@ body {
   font-size: 12px; color: var(--text-dim); text-align: center;
   pointer-events: none; transition: opacity 0.5s;
 }
-.canvas-zoom-bar {
-  position: absolute; bottom: 6px; right: 8px;
-  display: flex; align-items: center; gap: 5px;
-  background: rgba(255,255,255,0.75); border: 1px solid var(--border);
-  border-radius: 3px; padding: 2px 8px; z-index: 10;
-  pointer-events: auto;
+.canvas-toolbar {
+  position: absolute; bottom: 6px; left: 6px; right: 6px;
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.82); border: 1px solid var(--border);
+  border-radius: 4px; padding: 3px 8px; z-index: 10;
+  pointer-events: auto; backdrop-filter: blur(4px);
 }
-.canvas-zoom-bar span {
-  font-size: 7px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.5px;
+.canvas-toolbar-group {
+  display: flex; align-items: center; gap: 3px;
 }
-.canvas-zoom-bar input[type="range"] {
-  width: 60px; height: 3px; accent-color: var(--active);
+.canvas-tool-btn {
+  font-family: inherit; font-size: 7px; font-weight: 800;
+  padding: 3px 7px; border: 1px solid var(--border); border-radius: 3px;
+  background: var(--surface); color: var(--text-second); cursor: pointer;
+  letter-spacing: 0.5px; transition: all 0.12s;
 }
+.canvas-tool-btn:hover { background: var(--surface-alt); }
+.canvas-tool-btn.active { background: var(--accent); color: #3A2030; border-color: var(--accent); }
+.canvas-tool-btn.active-wall { background: var(--chord); color: white; border-color: var(--chord); }
+.canvas-tool-btn.active-kick { background: #D05050; color: white; border-color: #D05050; }
+.canvas-tool-btn.active-gravity { background: #B359E6; color: white; border-color: #B359E6; }
+.canvas-tool-btn.dim { color: var(--text-dim); border-color: var(--border); }
 
 .sidebar {
   width: 260px;
@@ -366,10 +375,22 @@ input[type="range"] {
     <canvas id="canvas"></canvas>
     <div class="note-display" id="noteDisplay">--</div>
     <div class="start-hint" id="startHint">Drag on canvas to play</div>
-    <div class="canvas-zoom-bar">
-      <span>ZOOM</span>
-      <input type="range" id="canvasZoom" min="50" max="300" value="100">
-      <span id="canvasZoomVal">100%</span>
+    <div class="canvas-toolbar">
+      <div class="canvas-toolbar-group">
+        <button class="canvas-tool-btn" id="btnToolNone2">DRAG</button>
+        <button class="canvas-tool-btn" id="btnToolBarrier2">SNARE</button>
+        <button class="canvas-tool-btn" id="btnToolKickBarrier2">KICK</button>
+        <button class="canvas-tool-btn" id="btnToolGravity2">GRAVITY</button>
+      </div>
+      <div class="canvas-toolbar-group">
+        <button class="canvas-tool-btn dim" id="btnUndoIntervention2">UNDO</button>
+        <button class="canvas-tool-btn dim" id="btnClearIntervention2">CLEAR</button>
+      </div>
+      <div class="canvas-toolbar-group" style="margin-left:auto">
+        <span style="font-size:7px;font-weight:700;color:var(--text-dim);letter-spacing:0.5px">ZOOM</span>
+        <input type="range" id="canvasZoom" min="50" max="300" value="100" style="width:60px;height:3px;accent-color:var(--active)">
+        <span style="font-size:7px;font-weight:600;color:var(--text-dim)" id="canvasZoomVal">100%</span>
+      </div>
     </div>
   </div>
 
@@ -528,6 +549,23 @@ input[type="range"] {
       <div class="row">
         <label>Energy</label>
         <span class="val" id="fieldEnergyVal">0.00</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">PHYSICAL INTERVENTION</div>
+      <div class="mode-btns" style="margin-bottom:6px">
+        <button class="mode-btn" id="btnToolNone" style="flex:1">DRAG</button>
+        <button class="mode-btn" id="btnToolBarrier" style="flex:1">SNARE</button>
+        <button class="mode-btn" id="btnToolKickBarrier" style="flex:1">KICK</button>
+        <button class="mode-btn" id="btnToolGravity" style="flex:1">GRAVITY</button>
+      </div>
+      <div class="row">
+        <button class="small-btn" id="btnUndoIntervention" style="flex:1">UNDO</button>
+        <button class="small-btn" id="btnClearIntervention" style="flex:1">CLEAR ALL</button>
+      </div>
+      <div class="row" style="margin-top:2px">
+        <span style="font-size:7px;color:var(--text-dim)" id="interventionInfo">DRAG mode — drag canvas to warp</span>
       </div>
     </div>
   </div>
@@ -1280,7 +1318,8 @@ function kineticTick(dx, dy) {
 
   // Speed-based accumulator (not distance-based)
   const rawSpeed = val('autoSpeed') / 60;
-  const speedIncrement = (1.0 / 30.0) * rawSpeed * (1 + fieldWarp.energy * 0.18 + fieldWarp.dragCurve * 0.12);
+  const gMod = (typeof gravitySpeedModifier !== 'undefined') ? gravitySpeedModifier : 1.0;
+  const speedIncrement = (1.0 / 30.0) * rawSpeed * (1 + fieldWarp.energy * 0.18 + fieldWarp.dragCurve * 0.12) * gMod;
   kineticAccum += speedIncrement;
 
   const baseStepSize = 0.150;  // fixed 30% gate ratio
@@ -1981,6 +2020,7 @@ function render() {
   }
 
   drawClothMesh(w, h, warp);
+  if (typeof drawInterventions === 'function') drawInterventions(w, h, now);
   drawAutoOrbitTrail(w, h, warp, now);
   drawAutoOrbitPrediction(w, h, warp);
 
@@ -2021,15 +2061,32 @@ function render() {
 requestAnimationFrame(render);
 
 // ── Mouse / Touch ──
+function isInterventionActive() {
+  return typeof interventionTool !== 'undefined' && interventionTool !== 'none';
+}
+
 function onPointerDown(x, y) {
+  if (isInterventionActive()) {
+    interventionDrawStart = { x, y };
+    interventionDrawEnd = { x, y };
+    return;
+  }
   beginFieldDrag(x, y);
 }
 
 function onPointerMove(x, y) {
+  if (isInterventionActive() && interventionDrawStart) {
+    interventionDrawEnd = { x, y };
+    return;
+  }
   moveFieldDrag(x, y);
 }
 
 function onPointerUp() {
+  if (isInterventionActive() && interventionDrawStart) {
+    interventionFinishDraw();
+    return;
+  }
   endFieldDrag();
 }
 
@@ -2047,14 +2104,23 @@ canvas.addEventListener('mousedown', (e) => {
 });
 canvas.addEventListener('mousemove', (e) => {
   const p = clientToCanvasNorm(e.clientX, e.clientY);
-  if (fieldState.pressed) onPointerMove(p.x, p.y);
+  if (interventionTool !== 'none' && interventionDrawStart) { onPointerMove(p.x, p.y); }
+  else if (fieldState.pressed) { onPointerMove(p.x, p.y); }
 });
 window.addEventListener('mousemove', (e) => {
+  if (interventionTool !== 'none' && interventionDrawStart) {
+    const p = clientToCanvasNorm(e.clientX, e.clientY);
+    onPointerMove(p.x, p.y);
+    return;
+  }
   if (!fieldState.pressed) return;
   const p = clientToCanvasNorm(e.clientX, e.clientY);
   onPointerMove(p.x, p.y);
 });
 canvas.addEventListener('mouseup', onPointerUp);
+window.addEventListener('mouseup', () => {
+  if (interventionTool !== 'none' && interventionDrawStart) onPointerUp();
+});
 canvas.addEventListener('mouseleave', () => { fieldState.inside = false; if (!fieldState.pressed) updateFieldStatusUI(); });
 
 canvas.addEventListener('touchstart', (e) => {
@@ -2416,7 +2482,8 @@ function autoTick() {
   autoLastTime = now;
 
   const speed = val('autoSpeed') / 60;
-  autoPhase += dt * speed * 2.0;
+  const gMod = (typeof gravitySpeedModifier !== 'undefined') ? gravitySpeedModifier : 1.0;
+  autoPhase += dt * speed * 2.0 * gMod;
 
   const patternFn = GEO_PATTERNS[currentPatternName] || GEO_PATTERNS['Lissajous 3:2'];
   const basePos = patternFn(autoPhase);
@@ -2446,8 +2513,17 @@ function autoTick() {
   mousePos = { x: newPos.x, y: newPos.y };
   mouseDown = true;
 
-  if (Math.abs(dx) > 0.0001 || Math.abs(dy) > 0.0001) {
-    kineticTick(dx, dy);
+  // Physical interventions — capture position before/after to include in kinetic motion
+  const prePhysX = mousePos.x, prePhysY = mousePos.y;
+  if (typeof tickBarriers === 'function') tickBarriers(now);
+  if (typeof tickGravityWells === 'function') tickGravityWells(now);
+  const physDx = mousePos.x - prePhysX;
+  const physDy = mousePos.y - prePhysY;
+
+  const totalDx = dx + physDx;
+  const totalDy = dy + physDy;
+  if (Math.abs(totalDx) > 0.0001 || Math.abs(totalDy) > 0.0001) {
+    kineticTick(totalDx, totalDy);
   }
 }
 
@@ -2466,6 +2542,390 @@ patSel.addEventListener('change', () => {
 });
 
 bindSlider('autoSpeed', 'autoSpeedVal', v => v);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Physical Intervention — Barriers (Walls) & Gravity Wells
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+let interventionTool = 'none'; // 'none' | 'barrier' | 'gravity'
+const barriers = [];
+const gravityWells = [];
+const barrierLastHit = {};
+let barrierDeflectionX = 0, barrierDeflectionY = 0;
+let gravityVelocityX = 0, gravityVelocityY = 0;
+let gravitySpeedModifier = 1.0;
+let interventionDrawStart = null;
+let interventionDrawEnd = null;
+const ripples = [];
+
+const BARRIER_MAX = 6;
+const BARRIER_THICKNESS = 0.02;
+const BARRIER_COOLDOWN = 0.12;
+const BARRIER_DEFLECT_DECAY = 0.88;
+const GRAVITY_MAX = 4;
+const GRAVITY_MIN_RADIUS = 0.06;
+const GRAVITY_MAX_RADIUS = 0.30;
+const GRAVITY_STRENGTH = 0.06;
+const GRAVITY_DAMPING = 0.95;
+
+let interventionIdCounter = 0;
+const interventionUndoStack = [];
+var gravityFilterMod = 0; // 0 = no effect, 1 = max proximity
+
+// ── Barrier helpers ──
+function barrierNormal(b) {
+  const dx = b.x2 - b.x1, dy = b.y2 - b.y1;
+  const len = Math.hypot(dx, dy);
+  if (len < 0.001) return { x: 0, y: -1 };
+  return { x: -dy / len, y: dx / len };
+}
+function barrierLength(b) { return Math.hypot(b.x2 - b.x1, b.y2 - b.y1); }
+function distToBarrier(b, px, py) {
+  const ax = px - b.x1, ay = py - b.y1;
+  const bx = b.x2 - b.x1, by = b.y2 - b.y1;
+  const lenSq = bx * bx + by * by;
+  if (lenSq < 0.0001) return Math.hypot(ax, ay);
+  const t = Math.max(0, Math.min(1, (ax * bx + ay * by) / lenSq));
+  const cx = b.x1 + t * bx - px, cy = b.y1 + t * by - py;
+  return Math.hypot(cx, cy);
+}
+
+// ── Tool selection ──
+function setInterventionTool(tool) {
+  interventionTool = tool;
+  // Sidebar buttons
+  $('btnToolNone').classList.toggle('active', tool === 'none');
+  $('btnToolBarrier').classList.toggle('active', tool === 'barrier');
+  $('btnToolKickBarrier').classList.toggle('active', tool === 'kickbarrier');
+  $('btnToolGravity').classList.toggle('active', tool === 'gravity');
+  // Canvas toolbar buttons
+  $('btnToolNone2').className = 'canvas-tool-btn' + (tool === 'none' ? ' active' : '');
+  $('btnToolBarrier2').className = 'canvas-tool-btn' + (tool === 'barrier' ? ' active-wall' : '');
+  $('btnToolKickBarrier2').className = 'canvas-tool-btn' + (tool === 'kickbarrier' ? ' active-kick' : '');
+  $('btnToolGravity2').className = 'canvas-tool-btn' + (tool === 'gravity' ? ' active-gravity' : '');
+  const labels = { none: 'DRAG mode — drag canvas to warp', barrier: 'SNARE WALL — collision triggers snare', kickbarrier: 'KICK WALL — collision triggers kick', gravity: 'GRAVITY — click to place on canvas' };
+  if (tool !== 'none') $('interventionInfo').textContent = labels[tool];
+  interventionDrawStart = null;
+  interventionDrawEnd = null;
+}
+// Sidebar
+$('btnToolNone').addEventListener('click', () => setInterventionTool('none'));
+$('btnToolBarrier').addEventListener('click', () => setInterventionTool('barrier'));
+$('btnToolKickBarrier').addEventListener('click', () => setInterventionTool('kickbarrier'));
+$('btnToolGravity').addEventListener('click', () => setInterventionTool('gravity'));
+// Canvas toolbar
+$('btnToolNone2').addEventListener('click', () => setInterventionTool('none'));
+$('btnToolBarrier2').addEventListener('click', () => setInterventionTool('barrier'));
+$('btnToolKickBarrier2').addEventListener('click', () => setInterventionTool('kickbarrier'));
+$('btnToolGravity2').addEventListener('click', () => setInterventionTool('gravity'));
+setInterventionTool('none');
+
+$('btnUndoIntervention').addEventListener('click', undoIntervention);
+
+$('btnClearIntervention').addEventListener('click', clearAllInterventions);
+$('btnUndoIntervention2').addEventListener('click', undoIntervention);
+$('btnClearIntervention2').addEventListener('click', clearAllInterventions);
+
+function undoIntervention() {
+  if (interventionUndoStack.length === 0) return;
+  const last = interventionUndoStack.pop();
+  if (last === 'barrier' && barriers.length > 0) barriers.pop();
+  if (last === 'gravity' && gravityWells.length > 0) gravityWells.pop();
+}
+function clearAllInterventions() {
+  barriers.length = 0;
+  gravityWells.length = 0;
+  interventionUndoStack.length = 0;
+  barrierDeflectionX = 0; barrierDeflectionY = 0;
+  gravityVelocityX = 0; gravityVelocityY = 0;
+}
+
+// ── Intervention draw finish (called from onPointerUp) ──
+function interventionFinishDraw() {
+  if (!interventionDrawStart || !interventionDrawEnd) return;
+  const s = interventionDrawStart, e = interventionDrawEnd;
+
+  if (interventionTool === 'barrier' || interventionTool === 'kickbarrier') {
+    const isKick = interventionTool === 'kickbarrier';
+    const len = Math.hypot(e.x - s.x, e.y - s.y);
+    if (len > 0.01) {
+      if (barriers.length >= BARRIER_MAX) barriers.shift();
+      barriers.push({ id: ++interventionIdCounter, x1: s.x, y1: s.y, x2: e.x, y2: e.y, isKick, birth: performance.now() });
+      interventionUndoStack.push('barrier');
+    }
+  } else if (interventionTool === 'gravity') {
+    const radius = Math.max(GRAVITY_MIN_RADIUS, Math.min(GRAVITY_MAX_RADIUS, Math.hypot(e.x - s.x, e.y - s.y)));
+    if (gravityWells.length >= GRAVITY_MAX) gravityWells.shift();
+    gravityWells.push({ id: ++interventionIdCounter, cx: s.x, cy: s.y, radius, strength: GRAVITY_STRENGTH * (radius / GRAVITY_MIN_RADIUS), birth: performance.now() });
+    interventionUndoStack.push('gravity');
+  }
+  interventionDrawStart = null;
+  interventionDrawEnd = null;
+}
+
+// ── Physics: tick barriers ──
+function tickBarriers(now) {
+  barrierDeflectionX *= BARRIER_DEFLECT_DECAY;
+  barrierDeflectionY *= BARRIER_DEFLECT_DECAY;
+  if (Math.abs(barrierDeflectionX) < 0.0005 && Math.abs(barrierDeflectionY) < 0.0005) {
+    barrierDeflectionX = 0; barrierDeflectionY = 0;
+  }
+
+  const orbX = mousePos.x, orbY = mousePos.y;
+  for (const b of barriers) {
+    if (barrierLength(b) < 0.01) continue;
+    if (barrierLastHit[b.id] && (now - barrierLastHit[b.id]) < BARRIER_COOLDOWN * 1000) continue;
+    const dist = distToBarrier(b, orbX, orbY);
+    if (dist < BARRIER_THICKNESS) {
+      const n = barrierNormal(b);
+      const deflectStrength = b.isKick ? 0.09 : 0.06;
+      const dx = orbX - (b.x1 + b.x2) / 2;
+      const dy = orbY - (b.y1 + b.y2) / 2;
+      const side = dx * n.x + dy * n.y;
+      const sign = side >= 0 ? 1 : -1;
+      barrierDeflectionX += n.x * deflectStrength * sign;
+      barrierDeflectionY += n.y * deflectStrength * sign;
+      barrierLastHit[b.id] = now;
+
+      // Trigger drum on collision: kick or snare
+      if (audioCtx) {
+        playDrum(b.isKick ? 'kick' : 'snare', b.isKick ? 0.9 : 0.7);
+      }
+
+      // Ripple at hit point
+      const ripColor = b.isKick ? 'rgba(208,80,80,0.6)' : 'rgba(106,159,199,0.6)';
+      ripples.push({ x: orbX, y: orbY, birth: now, color: ripColor });
+    }
+  }
+
+  if (autoPlaying) {
+    mousePos.x += barrierDeflectionX;
+    mousePos.y += barrierDeflectionY;
+    mousePos.x = Math.max(0.05, Math.min(0.95, mousePos.x));
+    mousePos.y = Math.max(0.05, Math.min(0.95, mousePos.y));
+  }
+}
+
+// ── Physics: tick gravity wells ──
+function tickGravityWells(now) {
+  gravityVelocityX *= GRAVITY_DAMPING;
+  gravityVelocityY *= GRAVITY_DAMPING;
+  gravitySpeedModifier += (1.0 - gravitySpeedModifier) * 0.05;
+
+  if (Math.abs(gravityVelocityX) < 0.0003 && Math.abs(gravityVelocityY) < 0.0003) {
+    gravityVelocityX = 0; gravityVelocityY = 0;
+  }
+
+  let maxProximity = 0;
+  const orbX = mousePos.x, orbY = mousePos.y;
+  for (const well of gravityWells) {
+    const dx = well.cx - orbX, dy = well.cy - orbY;
+    const dist = Math.hypot(dx, dy);
+    if (dist >= well.radius || dist < 0.005) continue;
+
+    const normalizedDist = dist / well.radius;
+    const falloff = 1.0 - normalizedDist;
+    const pull = well.strength * falloff * falloff * (1.0 + falloff);
+    const nx = dx / dist, ny = dy / dist;
+
+    gravityVelocityX += nx * pull;
+    gravityVelocityY += ny * pull;
+
+    const tempoBoost = 1.0 + falloff * falloff * 1.5;
+    gravitySpeedModifier = Math.max(gravitySpeedModifier, tempoBoost);
+
+    // Track proximity for filter modulation
+    maxProximity = Math.max(maxProximity, falloff);
+
+    // Near-center capture → ripple
+    if (dist < well.radius * 0.15) {
+      ripples.push({ x: well.cx, y: well.cy, birth: now, color: 'rgba(179,89,230,0.5)' });
+    }
+  }
+
+  // Smooth filter modulation (attack fast, release slow)
+  const targetMod = maxProximity * maxProximity; // squared for more dramatic near-center
+  const rate = targetMod > gravityFilterMod ? 0.3 : 0.04; // fast attack, slow release
+  gravityFilterMod += (targetMod - gravityFilterMod) * rate;
+  if (gravityFilterMod < 0.001) gravityFilterMod = 0;
+
+  // ── Continuous audio modulation (like Field Drag but for gravity) ──
+  if (audioCtx && synthFilterNode && currentOsc && gravityWells.length > 0) {
+    const gm = gravityFilterMod;
+    const t = audioCtx.currentTime;
+
+    // 1. Filter cutoff: open dramatically near center
+    const baseCutoff = val('cutoff') / 100;
+    const gravCutoffBoost = 1.0 + gm * 4.0; // up to 5x brighter
+    const cutoffHz = Math.min(20 + 80 * Math.pow(300, Math.min(baseCutoff * gravCutoffBoost, 1.0)), audioCtx.sampleRate * 0.45);
+    synthFilterNode.frequency.setTargetAtTime(cutoffHz, t, 0.02);
+
+    // 2. Resonance: strong wah sweep near center
+    const baseReso = val('resonance') / 100;
+    const gravResoBoost = gm * 15;
+    const resoQ = 0.5 + baseReso * 20 + gravResoBoost;
+    synthFilterNode.Q.setTargetAtTime(Math.min(resoQ, 28), t, 0.02);
+
+    // 3. Detune: pitch wobble, ±30 cents at center (creates "sucked in" feel)
+    const detuneCents = Math.sin(performance.now() * 0.008) * gm * 30;
+    currentOsc.detune.setTargetAtTime(detuneCents, t, 0.02);
+
+    // 4. Sustained gain: keep synth audible while inside gravity well
+    //    This is key — without this, the note envelope fades and filter changes are inaudible
+    if (gm > 0.05) {
+      const baseVol = val('synthVol') / 100;
+      const gravGain = baseVol * 0.3 * gm; // sustain at up to 30% volume while in well
+      synthGainNode.gain.setTargetAtTime(Math.max(synthGainNode.gain.value, gravGain), t, 0.03);
+    }
+  }
+
+  // Reset filter/detune when no gravity wells exist
+  if (audioCtx && synthFilterNode && currentOsc && gravityWells.length === 0 && gravityFilterMod < 0.001) {
+    const t = audioCtx.currentTime;
+    const baseCutoff = val('cutoff') / 100;
+    const cutoffHz = Math.min(20 + 80 * Math.pow(300, baseCutoff), audioCtx.sampleRate * 0.45);
+    synthFilterNode.frequency.setTargetAtTime(cutoffHz, t, 0.05);
+    const baseReso = val('resonance') / 100;
+    synthFilterNode.Q.setTargetAtTime(0.5 + baseReso * 20, t, 0.05);
+    currentOsc.detune.setTargetAtTime(0, t, 0.05);
+  }
+
+  if (autoPlaying) {
+    mousePos.x += gravityVelocityX;
+    mousePos.y += gravityVelocityY;
+    mousePos.x = Math.max(0.05, Math.min(0.95, mousePos.x));
+    mousePos.y = Math.max(0.05, Math.min(0.95, mousePos.y));
+  }
+}
+
+// ── Drawing: barriers, gravity wells, ripples ──
+function drawInterventions(w, h, now) {
+  ctx.save();
+
+  // Draw barriers (walls)
+  for (const b of barriers) {
+    const x1 = b.x1 * w, y1 = b.y1 * h, x2 = b.x2 * w, y2 = b.y2 * h;
+    const col = b.isKick ? '208,80,80' : '106,159,199';
+    const glowW = b.isKick ? 16 : 12;
+    const lineW = b.isKick ? 4.5 : 3;
+    const dotR = b.isKick ? 4 : 3;
+
+    // Glow
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+    ctx.strokeStyle = `rgba(${col},${b.isKick ? 0.20 : 0.15})`;
+    ctx.lineWidth = glowW; ctx.lineCap = 'round'; ctx.stroke();
+
+    // Main line
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+    ctx.strokeStyle = `rgba(${col},${b.isKick ? 0.85 : 0.7})`;
+    ctx.lineWidth = lineW; ctx.lineCap = 'round'; ctx.stroke();
+
+    // Kick wall: inner highlight for heavy feel
+    if (b.isKick) {
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+      ctx.strokeStyle = `rgba(${col},0.3)`;
+      ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.stroke();
+    }
+
+    // End dots
+    ctx.fillStyle = `rgba(${col},0.8)`;
+    ctx.beginPath(); ctx.arc(x1, y1, dotR, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x2, y2, dotR, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Draw gravity wells (concentric pulse rings)
+  for (const well of gravityWells) {
+    const cx = well.cx * w, cy = well.cy * h;
+    const rPx = well.radius * Math.min(w, h);
+    const age = (now - well.birth) / 1000;
+    const breathe = 1.0 + Math.sin(age * 3.0) * 0.12;
+
+    // Outer influence gradient
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, rPx);
+    grad.addColorStop(0, 'rgba(179,89,230,0.12)');
+    grad.addColorStop(0.7, 'rgba(179,89,230,0.04)');
+    grad.addColorStop(1, 'rgba(179,89,230,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(cx, cy, rPx, 0, Math.PI * 2); ctx.fill();
+
+    // Concentric pulse rings (3 rings expanding outward)
+    for (let ring = 0; ring < 3; ring++) {
+      const phase = (age * 1.5 + ring * 0.33) % 1.0;
+      const ringR = rPx * 0.1 + rPx * 0.7 * phase;
+      const ringAlpha = 0.35 * (1.0 - phase);
+      ctx.beginPath(); ctx.arc(cx, cy, ringR * breathe, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(179,89,230,${ringAlpha})`;
+      ctx.lineWidth = 1.5; ctx.stroke();
+    }
+
+    // Core glow
+    const coreR = rPx * 0.15 * breathe;
+    const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR * 2);
+    coreGrad.addColorStop(0, 'rgba(179,89,230,0.35)');
+    coreGrad.addColorStop(1, 'rgba(179,89,230,0)');
+    ctx.fillStyle = coreGrad;
+    ctx.beginPath(); ctx.arc(cx, cy, coreR * 2, 0, Math.PI * 2); ctx.fill();
+
+    // Center dot
+    ctx.fillStyle = 'rgba(179,89,230,0.7)';
+    ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill();
+
+    // Spiral arms (4)
+    ctx.lineWidth = 0.8;
+    for (let s = 0; s < 4; s++) {
+      const baseAngle = (s * Math.PI * 2 / 4) + age * 1.5;
+      ctx.beginPath();
+      for (let step = 0; step < 12; step++) {
+        const t = step / 11;
+        const r = rPx * 0.08 + rPx * 0.55 * t;
+        const angle = baseAngle + t * 1.5;
+        const sx = cx + Math.cos(angle) * r * breathe;
+        const sy = cy + Math.sin(angle) * r * breathe;
+        if (step === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+      }
+      ctx.strokeStyle = `rgba(179,89,230,${0.25 * (1 - age % 1 * 0.3)})`;
+      ctx.stroke();
+    }
+  }
+
+  // Draw preview line (while drawing)
+  if (interventionDrawStart && interventionDrawEnd) {
+    const s = interventionDrawStart, e = interventionDrawEnd;
+    if (interventionTool === 'barrier' || interventionTool === 'kickbarrier') {
+      const preCol = interventionTool === 'kickbarrier' ? 'rgba(208,80,80,0.4)' : 'rgba(106,159,199,0.4)';
+      ctx.beginPath();
+      ctx.moveTo(s.x * w, s.y * h); ctx.lineTo(e.x * w, e.y * h);
+      ctx.strokeStyle = preCol;
+      ctx.lineWidth = interventionTool === 'kickbarrier' ? 3 : 2;
+      ctx.setLineDash([5, 5]); ctx.lineCap = 'round'; ctx.stroke();
+      ctx.setLineDash([]);
+    } else if (interventionTool === 'gravity') {
+      const radius = Math.max(GRAVITY_MIN_RADIUS, Math.min(GRAVITY_MAX_RADIUS, Math.hypot(e.x - s.x, e.y - s.y)));
+      const rPx = radius * Math.min(w, h);
+      ctx.beginPath(); ctx.arc(s.x * w, s.y * h, rPx, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(179,89,230,0.4)';
+      ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(179,89,230,0.5)';
+      ctx.beginPath(); ctx.arc(s.x * w, s.y * h, 4, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  // Draw ripples
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    const rip = ripples[i];
+    const age = (now - rip.birth) / 1000;
+    if (age > 0.8) { ripples.splice(i, 1); continue; }
+    const radius = 10 + age * 60;
+    const alpha = 0.5 * (1 - age / 0.8);
+    ctx.beginPath(); ctx.arc(rip.x * w, rip.y * h, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = rip.color.replace(/[\d.]+\)$/, alpha + ')');
+    ctx.lineWidth = 2; ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
 
 // ── Init ──
 populateSelects();
